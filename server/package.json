@@ -9,7 +9,10 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+ "license": "ISC",
+  "engines": {
+    "node": "18.x"
+  },
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",
