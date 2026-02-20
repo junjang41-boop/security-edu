@@ -29,7 +29,7 @@ function VideoPage() {
 
   // 유튜브 URL 불러오기
   useEffect(() => {
-    axios.get('http://192.168.117.4:4000/api/education/youtube')
+    axios.get('security-edu.railway.internal/api/education/youtube')
       .then((res) => {
         const id = getYoutubeId(res.data.url);
         if (id) setVideoId(id);

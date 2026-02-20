@@ -18,7 +18,7 @@ function QuizPage() {
 
   // 랜덤 10문제 불러오기
   useEffect(() => {
-    axios.get('http://192.168.117.4:4000/api/quiz/get')
+    axios.get('security-edu.railway.internal/api/quiz/get')
       .then((res) => {
         setQuestions(res.data.questions);
         setLoading(false);
@@ -45,7 +45,7 @@ function QuizPage() {
     const answerArray = questions.map((q) => answers[q.id]);
 
     try {
-      const res = await axios.post('http://192.168.117.4:4000/api/quiz/submit', {
+      const res = await axios.post('security-edu.railway.internal/api/quiz/submit', {
         answers: answerArray,
         questions,
         employee,

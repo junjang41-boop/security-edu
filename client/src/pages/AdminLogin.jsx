@@ -10,7 +10,7 @@ function AdminLogin() {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post('http://192.168.117.4:4000/api/admin/login', {
+      const res = await axios.post('security-edu.railway.internal/api/admin/login', {
         id,
         password,
       });

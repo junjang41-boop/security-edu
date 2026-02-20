@@ -12,7 +12,7 @@ function EmployeeLogin() {
     if (!사번 || !이름) return setError('사번과 이름을 모두 입력해주세요.');
 
     try {
-      const res = await axios.post('http://192.168.117.4:4000/api/auth/verify', { 사번, 이름 });
+      const res = await axios.post('security-edu.railway.internal/api/auth/verify', { 사번, 이름 });
 
       if (res.data.success) {
         // 임직원 정보 세션에 저장
@@ -36,6 +36,7 @@ function EmployeeLogin() {
 
           <div style={styles.logoArea}>
             <span style={styles.logoIcon}>🛡️</span>
+            <p style={styles.company}>한솔아이원스(주)</p>
             <h2 style={styles.title}>보안교육 수강 시스템</h2>
             <p style={styles.subtitle}>사번과 이름을 입력하여 본인 확인 후 교육을 시작하세요.</p>
           </div>
@@ -104,6 +105,11 @@ const styles = {
   },
   logoIcon: {
     fontSize: '48px',
+  },
+  company: {
+    fontSize: '14px',
+    color: '#888',
+    textAlign: 'center',
   },
   title: {
     fontSize: '22px',
