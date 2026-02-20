@@ -7,6 +7,7 @@ function QuizPage() {
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const employee = JSON.parse(sessionStorage.getItem('employee') || '{}');
@@ -35,30 +36,28 @@ function QuizPage() {
   };
 
   // 제출
-  const handleSubmit = async () => {
-    // 모든 문제 답했는지 확인
+   const handleSubmit = async () => {
+    if (submitting) return; // 중복 제출 방지
     if (Object.keys(answers).length < questions.length) {
       alert('모든 문제에 답해주세요!');
       return;
     }
-
+    setSubmitting(true);
     const answerArray = questions.map((q) => answers[String(q.id)]);
-
     try {
       const res = await axios.post('https://security-edu-production.up.railway.app/api/quiz/submit', {
         answers: answerArray,
         questions,
         employee,
       });
-
-      // 결과를 세션에 저장하고 완료 페이지로 이동
       sessionStorage.setItem('quizResult', JSON.stringify(res.data));
       navigate('/complete');
     } catch (err) {
       alert('제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setSubmitting(false);
     }
   };
-
+  
   if (loading) {
     return (
       <div style={styles.container}>
