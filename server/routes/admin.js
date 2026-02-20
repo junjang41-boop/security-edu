@@ -163,15 +163,37 @@ router.post('/upload-employees', upload.single('file'), async (req, res) => {
 // ─── 이수 현황 엑셀 다운로드 ────────────────────────
 router.get('/download-employees', async (req, res) => {
   try {
-    const snapshot = await db.collection('employees').get();
-    const rows = snapshot.docs.map((doc) => doc.data());
+    const [employeesSnapshot, resultsSnapshot] = await Promise.all([
+      db.collection('employees').get(),
+      db.collection('quiz_results').get(),
+    ]);
+
+    // 합격한 결과만 사번 기준으로 이수일시 맵 생성
+    const resultMap = {};
+    resultsSnapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      if (data.합격여부 === '합격') {
+        resultMap[String(data.사번)] = data.응시일시?.toDate
+          ? data.응시일시.toDate().toLocaleString('ko-KR')
+          : data.응시일시;
+      }
+    });
+
+    const rows = employeesSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        사번: data.사번,
+        이름: data.이름,
+        이메일: data.이메일,
+        보안교육이수여부: data.보안교육이수여부,
+        이수일시: resultMap[String(data.사번)] || '',
+      };
+    });
 
     const worksheet = xlsx.utils.json_to_sheet(rows);
     const workbook = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(workbook, worksheet, '인원명부');
-
     const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-
     res.setHeader('Content-Disposition', 'attachment; filename=employees.xlsx');
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.send(buffer);

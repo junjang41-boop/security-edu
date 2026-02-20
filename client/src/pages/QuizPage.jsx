@@ -31,7 +31,7 @@ function QuizPage() {
 
   // 보기 선택
   const handleSelect = (questionId, optionIndex) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: optionIndex }));
+    setAnswers((prev) => ({ ...prev, [String(questionId)]: optionIndex }));
   };
 
   // 제출
@@ -42,7 +42,7 @@ function QuizPage() {
       return;
     }
 
-    const answerArray = questions.map((q) => answers[q.id]);
+    const answerArray = questions.map((q) => answers[String(q.id)]);
 
     try {
       const res = await axios.post('https://security-edu-production.up.railway.app/api/quiz/submit', {
@@ -122,8 +122,8 @@ function QuizPage() {
         <button
           style={{
             ...styles.button,
-            backgroundColor: Object.keys(answers).length === questions.length ? '#4A90E2' : '#ccc',
-            cursor: Object.keys(answers).length === questions.length ? 'pointer' : 'not-allowed',
+            backgroundColor: Object.keys(answers).length >= questions.length ? '#4A90E2' : '#ccc',
+            cursor: Object.keys(answers).length >= questions.length ? 'pointer' : 'not-allowed',
           }}
           onClick={handleSubmit}
           disabled={Object.keys(answers).length < questions.length}
