@@ -2,6 +2,8 @@ const { db } = require('./firebase');
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+console.log('ADMIN_ID:', process.env.ADMIN_ID);
+console.log('환경변수 확인 완료');
 
 const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
