@@ -203,4 +203,30 @@ router.get('/download-employees', async (req, res) => {
   }
 });
 
+// 테스트 이메일 발송
+router.post('/test-email', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ success: false, message: '이메일을 입력해주세요.' });
+
+  const sgMail = require('@sendgrid/mail');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  try {
+    await sgMail.send({
+      from: {
+        email: process.env.EMAIL_USER,
+        name: '한솔아이원스 보안교육',
+      },
+      to: email,
+      subject: '[한솔아이원스] 테스트 이메일입니다.',
+      html: '<p>테스트 이메일 발송 성공! 🎉</p>',
+    });
+    console.log(`테스트 이메일 발송 완료: ${email}`);
+    res.json({ success: true, message: '테스트 이메일 발송 완료!' });
+  } catch (err) {
+    console.log('테스트 이메일 발송 실패:', err.message);
+    res.status(500).json({ success: false, message: '발송 실패: ' + err.message });
+  }
+});
+
 module.exports = router;

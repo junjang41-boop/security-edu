@@ -14,6 +14,8 @@ function AdminDashboard() {
   const [quizProgress, setQuizProgress] = useState(0);
   const [quizLoading, setQuizLoading] = useState(false);
   const [quizList, setQuizList] = useState([]);
+  const [testEmail, setTestEmail] = useState('');
+  const [testEmailMessage, setTestEmailMessage] = useState('');
 
   const setMessage = (key, msg) => {
     setMessages((prev) => ({ ...prev, [key]: msg }));
@@ -94,6 +96,19 @@ function AdminDashboard() {
       setQuizList(res.data.questions);
     } catch (err) {
       alert('생성된 퀴즈가 없습니다. 먼저 퀴즈를 생성해주세요.');
+    }
+  };
+  // 테스트 이메일 발송
+  const handleTestEmail = async () => {
+    if (!testEmail) return setTestEmailMessage('이메일을 입력해주세요.');
+    try {
+      setTestEmailMessage('발송 중...');
+      const res = await axios.post('https://security-edu-production.up.railway.app/api/admin/test-email', {
+        email: testEmail,
+      });
+      setTestEmailMessage('✅ ' + res.data.message);
+    } catch (err) {
+      setTestEmailMessage('❌ ' + (err.response?.data?.message || '발송 실패'));
     }
   };
 
@@ -221,6 +236,25 @@ function AdminDashboard() {
               ))}
             </div>
           )}
+        </div>
+
+         {/* 테스트 이메일 발송 */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>📧 테스트 이메일 발송</h3>
+          <input
+            type="email"
+            placeholder="받을 이메일 주소 입력"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            style={styles.input}
+          />
+          <button
+            style={{ ...styles.button, backgroundColor: '#e67e22' }}
+            onClick={handleTestEmail}
+          >
+            테스트 메일 발송
+          </button>
+          {testEmailMessage && <p style={styles.message}>{testEmailMessage}</p>}
         </div>
 
         {/* 이수 현황 다운로드 */}
