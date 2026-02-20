@@ -4,21 +4,14 @@ const { db, storage } = require('../firebase');
 const OpenAI = require('openai');
 const xlsx = require('xlsx');
 const pdfParse = require('pdf-parse');
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 // youtube-captions-scraper 미사용
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Gmail SMTP 설정
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// SendGrid HTTP API 사용
 
 // 퀴즈 50문제 생성
 router.post('/generate', async (req, res) => {
@@ -204,8 +197,11 @@ router.post('/submit', async (req, res) => {
       `;
 
      // 이메일 발송 (실패해도 결과는 정상 반환)
-      transporter.sendMail({
-        from: `"한솔아이원스 보안교육" <${process.env.EMAIL_USER}>`,
+sgMail.send({
+        from: {
+          email: process.env.EMAIL_USER,
+          name: '한솔아이원스 보안교육',
+        },
         to: employee.이메일,
         subject: `[한솔아이원스] ${employee.이름}님의 보안교육 이수 완료 안내`,
         html: emailHtml,
