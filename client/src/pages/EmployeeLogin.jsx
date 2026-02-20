@@ -12,7 +12,7 @@ function EmployeeLogin() {
     if (!사번 || !이름) return setError('사번과 이름을 모두 입력해주세요.');
 
     try {
-      const res = await axios.post('security-edu.railway.internal/api/auth/verify', { 사번, 이름 });
+      const res = await axios.post('https://security-edu-production.up.railway.app/api/auth/verify', { 사번, 이름 });
 
       if (res.data.success) {
         // 임직원 정보 세션에 저장

@@ -23,7 +23,7 @@ function SlidePage() {
 
   // 교육자료 URL 불러오기
   useEffect(() => {
-    axios.get('security-edu.railway.internal/api/education/material')
+    axios.get('https://security-edu-production.up.railway.app/api/education/material')
       .then((res) => setFileUrl(res.data.fileUrl))
       .catch(() => setError('등록된 교육자료가 없습니다. 관리자에게 문의하세요.'));
   }, []);

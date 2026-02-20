@@ -10,7 +10,7 @@ function AdminLogin() {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post('security-edu.railway.internal/api/admin/login', {
+      const res = await axios.post('https://security-edu-production.up.railway.app/api/admin/login', {
         id,
         password,
       });

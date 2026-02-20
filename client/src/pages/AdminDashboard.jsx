@@ -25,7 +25,7 @@ function AdminDashboard() {
     const formData = new FormData();
     formData.append('file', materialFile);
     try {
-      const res = await axios.post('security-edu.railway.internal/api/admin/upload-material', formData);
+      const res = await axios.post('https://security-edu-production.up.railway.app/api/admin/upload-material', formData);
       setMessage('material', '✅ ' + res.data.message);
     } catch (err) {
       setMessage('material', '❌ ' + (err.response?.data?.message || '업로드 실패'));
@@ -36,7 +36,7 @@ function AdminDashboard() {
   const handleYoutubeUpload = async () => {
     if (!youtubeUrl) return setMessage('youtube', '링크를 입력해주세요.');
     try {
-      const res = await axios.post('security-edu.railway.internal/api/admin/upload-youtube', { url: youtubeUrl });
+      const res = await axios.post('https://security-edu-production.up.railway.app/api/admin/upload-youtube', { url: youtubeUrl });
       setMessage('youtube', '✅ ' + res.data.message);
     } catch (err) {
       setMessage('youtube', '❌ ' + (err.response?.data?.message || '저장 실패'));
@@ -49,7 +49,7 @@ function AdminDashboard() {
     const formData = new FormData();
     formData.append('file', employeeFile);
     try {
-      const res = await axios.post('security-edu.railway.internal/api/admin/upload-employees', formData);
+      const res = await axios.post('https://security-edu-production.up.railway.app/api/admin/upload-employees', formData);
       setMessage('employee', '✅ ' + res.data.message);
     } catch (err) {
       setMessage('employee', '❌ ' + (err.response?.data?.message || '업로드 실패'));
@@ -73,7 +73,7 @@ function AdminDashboard() {
     }, 900);
 
     try {
-      const res = await axios.post('security-edu.railway.internal/api/quiz/generate');
+      const res = await axios.post('https://security-edu-production.up.railway.app/api/quiz/generate');
       clearInterval(interval);
       setQuizProgress(100);
       setMessage('quiz', `✅ ${res.data.total}문항 생성 완료!`);
@@ -90,7 +90,7 @@ function AdminDashboard() {
   // 퀴즈 전체 목록 보기
   const handleViewQuiz = async () => {
     try {
-      const res = await axios.get('security-edu.railway.internal/api/quiz/all');
+      const res = await axios.get('https://security-edu-production.up.railway.app/api/quiz/all');
       setQuizList(res.data.questions);
     } catch (err) {
       alert('생성된 퀴즈가 없습니다. 먼저 퀴즈를 생성해주세요.');
@@ -99,12 +99,12 @@ function AdminDashboard() {
 
   // 퀴즈 엑셀 다운로드
   const handleDownloadQuiz = () => {
-    window.open('security-edu.railway.internal/api/quiz/download', '_blank');
+    window.open('https://security-edu-production.up.railway.app/api/quiz/download', '_blank');
   };
 
   // 이수 현황 다운로드
   const handleDownload = () => {
-    window.open('security-edu.railway.internal/api/admin/download-employees', '_blank');
+    window.open('https://security-edu-production.up.railway.app/api/admin/download-employees', '_blank');
   };
 
   return (
