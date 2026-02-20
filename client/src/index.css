@@ -1,0 +1,28 @@
+/* 전체 기본 리셋 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
+}
+
+/* 페이지 전체 감싸는 wrapper */
+.page-wrapper {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* 모바일 (375px 기준) */
+@media (max-width: 768px) {
+  .page-wrapper {
+    max-width: 375px;
+    padding: 0 16px;
+  }
+}

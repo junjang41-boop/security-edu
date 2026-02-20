@@ -1,0 +1,11 @@
+# 환경변수 (절대 올리면 안됨!)
+server/.env
+server/serviceAccountKey.json
+
+# 노드 모듈
+node_modules/
+server/node_modules/
+client/node_modules/
+
+# 빌드 결과물
+client/dist/

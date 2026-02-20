@@ -1,0 +1,348 @@
+import { useState } from 'react';
+import axios from 'axios';
+
+function AdminDashboard() {
+  const [materialFile, setMaterialFile] = useState(null);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [employeeFile, setEmployeeFile] = useState(null);
+  const [messages, setMessages] = useState({
+    material: '',
+    youtube: '',
+    employee: '',
+    quiz: '',
+  });
+  const [quizProgress, setQuizProgress] = useState(0);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [quizList, setQuizList] = useState([]);
+
+  const setMessage = (key, msg) => {
+    setMessages((prev) => ({ ...prev, [key]: msg }));
+  };
+
+  // 보안교육 자료 업로드
+  const handleMaterialUpload = async () => {
+    if (!materialFile) return setMessage('material', '파일을 선택해주세요.');
+    const formData = new FormData();
+    formData.append('file', materialFile);
+    try {
+      const res = await axios.post('http://192.168.117.4:4000/api/admin/upload-material', formData);
+      setMessage('material', '✅ ' + res.data.message);
+    } catch (err) {
+      setMessage('material', '❌ ' + (err.response?.data?.message || '업로드 실패'));
+    }
+  };
+
+  // 유튜브 링크 저장
+  const handleYoutubeUpload = async () => {
+    if (!youtubeUrl) return setMessage('youtube', '링크를 입력해주세요.');
+    try {
+      const res = await axios.post('http://192.168.117.4:4000/api/admin/upload-youtube', { url: youtubeUrl });
+      setMessage('youtube', '✅ ' + res.data.message);
+    } catch (err) {
+      setMessage('youtube', '❌ ' + (err.response?.data?.message || '저장 실패'));
+    }
+  };
+
+  // 인원명부 업로드
+  const handleEmployeeUpload = async () => {
+    if (!employeeFile) return setMessage('employee', '파일을 선택해주세요.');
+    const formData = new FormData();
+    formData.append('file', employeeFile);
+    try {
+      const res = await axios.post('http://192.168.117.4:4000/api/admin/upload-employees', formData);
+      setMessage('employee', '✅ ' + res.data.message);
+    } catch (err) {
+      setMessage('employee', '❌ ' + (err.response?.data?.message || '업로드 실패'));
+    }
+  };
+
+  // 퀴즈 생성
+  const handleGenerateQuiz = async () => {
+    setQuizLoading(true);
+    setQuizProgress(0);
+    setMessage('quiz', '');
+
+    const interval = setInterval(() => {
+      setQuizProgress((prev) => {
+        if (prev >= 95) {
+          clearInterval(interval);
+          return 95;
+        }
+        return prev + 1.5;
+      });
+    }, 900);
+
+    try {
+      const res = await axios.post('http://192.168.117.4:4000/api/quiz/generate');
+      clearInterval(interval);
+      setQuizProgress(100);
+      setMessage('quiz', `✅ ${res.data.total}문항 생성 완료!`);
+    } catch (err) {
+      clearInterval(interval);
+      setQuizProgress(0);
+      const errMsg = err.response?.data?.message || err.message || '알 수 없는 오류';
+      setMessage('quiz', `❌ 퀴즈 생성 실패: ${errMsg}`);
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
+  // 퀴즈 전체 목록 보기
+  const handleViewQuiz = async () => {
+    try {
+      const res = await axios.get('http://192.168.117.4:4000/api/quiz/all');
+      setQuizList(res.data.questions);
+    } catch (err) {
+      alert('생성된 퀴즈가 없습니다. 먼저 퀴즈를 생성해주세요.');
+    }
+  };
+
+  // 퀴즈 엑셀 다운로드
+  const handleDownloadQuiz = () => {
+    window.open('http://192.168.117.4:4000/api/quiz/download', '_blank');
+  };
+
+  // 이수 현황 다운로드
+  const handleDownload = () => {
+    window.open('http://192.168.117.4:4000/api/admin/download-employees', '_blank');
+  };
+
+  return (
+    <div style={styles.container}>
+      <div className="page-wrapper" style={styles.pageWrapper}>
+        <h2 style={styles.title}>🛡️ 보안교육 관리자 대시보드</h2>
+
+        {/* 보안교육 자료 업로드 */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>📄 보안교육 자료 업로드</h3>
+          <input
+            type="file"
+            accept=".pdf,.ppt,.pptx"
+            onChange={(e) => setMaterialFile(e.target.files[0])}
+            style={styles.fileInput}
+          />
+          <p style={styles.guide}>보안교육자료의 경우 <b>100MB 이하의 PDF, PPT 파일만 업로드 해주세요.</b></p>
+          <button style={styles.button} onClick={handleMaterialUpload}>업로드</button>
+          {messages.material && <p style={styles.message}>{messages.material}</p>}
+        </div>
+
+        {/* 유튜브 링크 */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>🎬 유튜브 영상 링크 등록</h3>
+          <input
+            type="text"
+            placeholder="https://www.youtube.com/..."
+            value={youtubeUrl}
+            onChange={(e) => setYoutubeUrl(e.target.value)}
+            style={styles.input}
+          />
+          <p style={styles.guide}><b>유튜브 영상 링크만</b> 올려주세요.</p>
+          <button style={styles.button} onClick={handleYoutubeUpload}>저장</button>
+          {messages.youtube && <p style={styles.message}>{messages.youtube}</p>}
+        </div>
+
+        {/* 인원명부 업로드 */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>👥 인원명부 업로드</h3>
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={(e) => setEmployeeFile(e.target.files[0])}
+            style={styles.fileInput}
+          />
+          <p style={styles.guide}><b>인원명부의 경우 Excel 파일만 업로드해주세요.</b></p>
+          <p style={styles.guide}>컬럼 순서: 사번 / 이름 / 이메일 / 보안교육이수여부</p>
+          <button style={styles.button} onClick={handleEmployeeUpload}>업로드</button>
+          {messages.employee && <p style={styles.message}>{messages.employee}</p>}
+        </div>
+
+        {/* 퀴즈 생성 */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>🧠 퀴즈 자동 생성</h3>
+          <p style={styles.guide}>유튜브 영상과 교육자료를 기반으로 GPT가 50문항을 생성합니다. 수강자마다 랜덤 10문제가 출제됩니다.</p>
+          <p style={styles.guide}>⚠️ 생성까지 30~60초 소요됩니다. 버튼 클릭 후 기다려주세요.</p>
+          <button
+            style={{
+              ...styles.button,
+              backgroundColor: quizLoading ? '#ccc' : '#8e44ad',
+              cursor: quizLoading ? 'not-allowed' : 'pointer',
+            }}
+            onClick={handleGenerateQuiz}
+            disabled={quizLoading}
+          >
+            {quizLoading ? '생성 중...' : '퀴즈 생성하기'}
+          </button>
+
+          {quizLoading && (
+            <div style={styles.progressBarWrapper}>
+              <div style={{ ...styles.progressBar, width: `${quizProgress}%` }} />
+              <p style={styles.progressText}>{Math.round(quizProgress)}% 완료</p>
+            </div>
+          )}
+
+          {messages.quiz && <p style={styles.message}>{messages.quiz}</p>}
+        </div>
+
+        {/* 퀴즈 문제 열람 */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>📋 생성된 퀴즈 열람</h3>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              style={{ ...styles.button, backgroundColor: '#2980b9' }}
+              onClick={handleViewQuiz}
+            >
+              문제 목록 보기
+            </button>
+            <button
+              style={{ ...styles.button, backgroundColor: '#27ae60' }}
+              onClick={handleDownloadQuiz}
+            >
+              엑셀 다운로드
+            </button>
+          </div>
+
+          {quizList.length > 0 && (
+            <div style={styles.quizList}>
+              {quizList.map((q, i) => (
+                <div key={i} style={styles.quizItem}>
+                  <p style={styles.quizQuestion}>
+                    <b>Q{i + 1}.</b> {q.question}
+                  </p>
+                  {q.options.map((opt, j) => (
+                    <p key={j} style={{
+                      ...styles.quizOption,
+                      color: j === q.answer ? '#27ae60' : '#555',
+                      fontWeight: j === q.answer ? 'bold' : 'normal',
+                    }}>
+                      {j + 1}. {opt} {j === q.answer ? '✅' : ''}
+                    </p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 이수 현황 다운로드 */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>📊 이수 현황 다운로드</h3>
+          <p style={styles.guide}>현재까지 업데이트된 인원명부를 엑셀로 다운로드합니다.</p>
+          <button style={{ ...styles.button, backgroundColor: '#27ae60' }} onClick={handleDownload}>
+            엑셀 다운로드
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  container: {
+    minHeight: '100vh',
+    backgroundColor: '#f0f2f5',
+    padding: '40px 0',
+  },
+  pageWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
+  },
+  title: {
+    fontSize: '24px',
+    color: '#333',
+    marginBottom: '8px',
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '28px',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  cardTitle: {
+    fontSize: '18px',
+    color: '#333',
+    marginBottom: '4px',
+  },
+  input: {
+    padding: '12px',
+    borderRadius: '8px',
+    border: '1px solid #ddd',
+    fontSize: '14px',
+  },
+  fileInput: {
+    fontSize: '14px',
+  },
+  guide: {
+    fontSize: '13px',
+    color: '#888',
+  },
+  button: {
+    padding: '12px 24px',
+    backgroundColor: '#4A90E2',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '15px',
+    cursor: 'pointer',
+    alignSelf: 'flex-start',
+  },
+  message: {
+    fontSize: '14px',
+    color: '#333',
+  },
+  progressBarWrapper: {
+    width: '100%',
+    backgroundColor: '#eee',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    height: '24px',
+    position: 'relative',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#8e44ad',
+    borderRadius: '8px',
+    transition: 'width 0.9s ease',
+  },
+  progressText: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    fontSize: '12px',
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  quizList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    maxHeight: '500px',
+    overflowY: 'auto',
+    padding: '8px',
+    marginTop: '8px',
+  },
+  quizItem: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: '8px',
+    padding: '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
+  quizQuestion: {
+    fontSize: '15px',
+    color: '#333',
+    marginBottom: '4px',
+  },
+  quizOption: {
+    fontSize: '14px',
+    paddingLeft: '12px',
+  },
+};
+
+export default AdminDashboard;

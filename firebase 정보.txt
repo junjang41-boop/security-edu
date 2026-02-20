@@ -1,0 +1,25 @@
+웹 앱에 Firebase 추가
+
+npm install firebase
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyC3sWjelLdiyul2OKjw4oUirl24K2u9TZQ",
+  authDomain: "security-edu.firebaseapp.com",
+  projectId: "security-edu",
+  storageBucket: "security-edu.firebasestorage.app",
+  messagingSenderId: "970973643404",
+  appId: "1:970973643404:web:d64c6c18011a7444aaf1a9"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+
+Firebase storage 버킷 주소
+gs://security-edu.firebasestorage.app
