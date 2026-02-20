@@ -203,19 +203,20 @@ router.post('/submit', async (req, res) => {
         </div>
       `;
 
-      try {
-        await transporter.sendMail({
-          from: `"한솔아이원스 보안교육" <${process.env.EMAIL_USER}>`,
-          to: employee.이메일,
-          subject: `[한솔아이원스] ${employee.이름}님의 보안교육 이수 완료 안내`,
-          html: emailHtml,
-        });
+     // 이메일 발송 (실패해도 결과는 정상 반환)
+      transporter.sendMail({
+        from: `"한솔아이원스 보안교육" <${process.env.EMAIL_USER}>`,
+        to: employee.이메일,
+        subject: `[한솔아이원스] ${employee.이름}님의 보안교육 이수 완료 안내`,
+        html: emailHtml,
+      }).then(() => {
         console.log(`이메일 발송 완료: ${employee.이메일}`);
-      } catch (mailErr) {
+      }).catch((mailErr) => {
         console.log('이메일 발송 실패:', mailErr.message);
-      }
+      });
     }
 
+    // 이메일 기다리지 않고 바로 응답
     res.json({ success: true, correct, total: questions.length, passed });
 
   } catch (err) {
