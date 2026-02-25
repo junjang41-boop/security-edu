@@ -85,8 +85,17 @@ answer는 정답 보기의 인덱스 번호입니다. (0=첫번째, 1=두번째,
       response_format: { type: 'json_object' },
     });
 
-    const result = JSON.parse(completion.choices[0].message.content);
-    const allQuestions = result.questions.map((q, i) => ({ ...q, id: i + 1 }));
+const result = JSON.parse(completion.choices[0].message.content);
+    console.log('GPT 응답 키:', Object.keys(result));
+
+    // GPT가 다양한 키 이름으로 반환할 수 있어서 방어 처리
+    const rawQuestions = result.questions || result.quiz || result.quizzes || result.items || Object.values(result)[0];
+
+    if (!rawQuestions || !Array.isArray(rawQuestions)) {
+      throw new Error('GPT 응답에서 문제 목록을 찾을 수 없습니다. 다시 시도해주세요.');
+    }
+
+    const allQuestions = rawQuestions.map((q, i) => ({ ...q, id: i + 1 }));
 
     await db.collection('settings').doc('quiz').set({
       questions: allQuestions,
