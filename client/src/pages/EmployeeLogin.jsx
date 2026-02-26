@@ -85,9 +85,9 @@ function EmployeeLogin() {
             onChange={(e) => { setSelectedEducation(e.target.value); setError(''); }}
             disabled={!selectedCompany}>
             <option value="">교육 선택</option>
-            {currentEducations.map(e => (
-              <option key={e.adminId} value={e.adminId}>{e.systemName}</option>
-            ))}
+            {currentEducations.filter(e => e.systemName && e.systemName !== '[교육 이름을 설정해주세요]').map(e => (
+  <option key={e.adminId} value={e.adminId}>{e.systemName}</option>
+))}
           </select>
 
           {error && <p style={styles.error}>{error}</p>}

@@ -4,7 +4,6 @@ import axios from 'axios';
 const API = 'https://security-edu-production.up.railway.app';
 
 function AdminDashboard() {
-  // ✅ 추가: 시스템 설정 state
 const adminId = sessionStorage.getItem('adminId');
 console.log('adminId from session:', adminId);
 const isSuper = sessionStorage.getItem('isSuper') === 'true';
@@ -30,14 +29,13 @@ const [testEmail, setTestEmail] = useState('');
 const [testEmailMessage, setTestEmailMessage] = useState('');
 
 const setMessage = (key, msg) => setMessages((prev) => ({ ...prev, [key]: msg }));
-  // ✅ 추가: 기존 설정값 불러오기
+
 useEffect(() => {
   axios.get(`${API}/api/admin/site-config?adminId=${adminId}`)
     .then(res => setSiteConfig({ systemName: res.data.systemName || '' }))
     .catch(() => {});
 }, []);
 
-  // ✅ 추가: 설정 저장
 const handleSaveConfig = async () => {
   if (!siteConfig.systemName) return setConfigMessage('교육명을 입력해주세요.');
   try {
@@ -54,12 +52,12 @@ const handleCreateAccount = async () => {
   if (!id || !companyName) return setAccountMessage('모든 항목을 입력해주세요.');
   try {
     await axios.post(`${API}/api/admin/create-account`, {
-  requesterId: adminId,
-  newId: id,
-  password: newAccount.password || 'Hansol123!@#',
-  companyName,
-  initialPassword: newAccount.initialPassword || '',
-});
+      requesterId: adminId,
+      newId: id,
+      password: newAccount.password || 'Hansol123!@#',
+      companyName,
+      initialPassword: newAccount.initialPassword || '',
+    });
     setAccountMessage('✅ 계정 생성 완료!');
     setNewAccount({ id: '', password: '', companyName: '' });
   } catch (err) {
@@ -73,6 +71,21 @@ const handleLoadAccounts = async () => {
     setAccountList(res.data.accounts);
   } catch {
     alert('조회 실패');
+  }
+};
+
+// ✅ 추가: 암호 리셋
+const handleResetPassword = async (targetId) => {
+  if (!window.confirm(`${targetId} 계정의 암호를 초기화하시겠습니까?\n초기 암호: Hansol123!@#`)) return;
+  try {
+    await axios.post(`${API}/api/admin/reset-password`, {
+      requesterId: adminId,
+      targetId,
+    });
+    alert(`✅ ${targetId} 암호가 초기화되었습니다.`);
+    handleLoadAccounts(); // 목록 새로고침
+  } catch (err) {
+    alert('❌ ' + (err.response?.data?.message || '초기화 실패'));
   }
 };
 
@@ -173,38 +186,46 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
     <p style={styles.guide}>새 회사의 관리자 계정을 생성합니다.</p>
     <input type="text" placeholder="아이디" value={newAccount.id}
       onChange={(e) => setNewAccount(p => ({ ...p, id: e.target.value }))} style={styles.input} />
-
     <input type="text" placeholder="회사명 (예: 한솔아이원스(주))" value={newAccount.companyName}
-  onChange={(e) => setNewAccount(p => ({ ...p, companyName: e.target.value }))} style={styles.input} />
-<input type="password" placeholder={`초기 암호 (미입력 시 Hansol123!@#)`} value={newAccount.initialPassword || ''}
-  onChange={(e) => setNewAccount(p => ({ ...p, initialPassword: e.target.value }))} style={styles.input} />
-<button style={{ ...styles.button, backgroundColor: '#2c3e50' }} onClick={handleCreateAccount}>계정 생성</button>
+      onChange={(e) => setNewAccount(p => ({ ...p, companyName: e.target.value }))} style={styles.input} />
+    <input type="password" placeholder={`초기 암호 (미입력 시 Hansol123!@#)`} value={newAccount.initialPassword || ''}
+      onChange={(e) => setNewAccount(p => ({ ...p, initialPassword: e.target.value }))} style={styles.input} />
+    <button style={{ ...styles.button, backgroundColor: '#2c3e50' }} onClick={handleCreateAccount}>계정 생성</button>
     {accountMessage && <p style={styles.message}>{accountMessage}</p>}
     <button style={{ ...styles.button, backgroundColor: '#7f8c8d' }} onClick={handleLoadAccounts}>
-  계정 목록 보기
-</button>
-{accountList.length > 0 && (
-  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', marginTop: '8px' }}>
-    <thead>
-      <tr style={{ backgroundColor: '#f0f2f5' }}>
-        <th style={thStyle}>아이디</th>
-        <th style={thStyle}>회사명</th>
-        <th style={thStyle}>초기암호변경</th>
-      </tr>
-    </thead>
-    <tbody>
-      {accountList.map((acc, i) => (
-        <tr key={i}>
-          <td style={tdStyle}>{acc.id}</td>
-          <td style={tdStyle}>{acc.companyName}</td>
-          <td style={{ ...tdStyle, color: acc.mustChangePassword ? '#e74c3c' : '#27ae60' }}>
-            {acc.mustChangePassword ? '미변경' : '변경완료'}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-)}
+      계정 목록 보기
+    </button>
+    {accountList.length > 0 && (
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', marginTop: '8px' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f0f2f5' }}>
+            <th style={thStyle}>아이디</th>
+            <th style={thStyle}>회사명</th>
+            <th style={thStyle}>초기암호변경</th>
+            <th style={thStyle}>암호 리셋</th>
+          </tr>
+        </thead>
+        <tbody>
+          {accountList.map((acc, i) => (
+            <tr key={i}>
+              <td style={tdStyle}>{acc.id}</td>
+              <td style={tdStyle}>{acc.companyName}</td>
+              <td style={{ ...tdStyle, color: acc.mustChangePassword ? '#e74c3c' : '#27ae60' }}>
+                {acc.mustChangePassword ? '미변경' : '변경완료'}
+              </td>
+              <td style={tdStyle}>
+                <button
+                  onClick={() => handleResetPassword(acc.id)}
+                  style={{ padding: '4px 10px', backgroundColor: '#e74c3c', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                >
+                  초기화
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
   </div>
 )}
 

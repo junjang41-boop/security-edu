@@ -302,7 +302,7 @@ if (requesterId !== process.env.ADMIN_ID) {
       companyName,
       mustChangePassword: true,
     });
-    await db.collection('settings').doc(newId).set({ companyName, systemName: '교육 수강 시스템' });
+    await db.collection('settings').doc(newId).set({ companyName, systemName: '[교육 이름을 설정해주세요]' });
     res.json({ message: '계정 생성 완료' });
   } catch (err) {
     res.status(500).json({ message: '계정 생성 실패' });
@@ -346,6 +346,20 @@ router.post('/change-password', async (req, res) => {
     res.json({ message: '암호 변경 완료' });
   } catch (err) {
     res.status(500).json({ message: '암호 변경 실패' });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  const { requesterId, targetId } = req.body;
+  if (requesterId !== process.env.ADMIN_ID) return res.status(401).json({ message: '권한 없음' });
+  try {
+    await db.collection('admins').doc(targetId).update({
+  password: 'Hansol123!@#',
+  mustChangePassword: true,
+});
+    res.json({ message: '초기화 완료' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
