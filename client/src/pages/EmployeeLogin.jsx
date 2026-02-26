@@ -43,6 +43,7 @@ function EmployeeLogin() {
       const res = await axios.post(`${API}/api/auth/verify`, { 사번, 이름, companyId: selectedEducation });
       if (res.data.success) {
         sessionStorage.setItem('employee', JSON.stringify(res.data.employee));
+sessionStorage.setItem('companyId', selectedEducation);
         navigate('/video');
       }
     } catch (err) {

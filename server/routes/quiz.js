@@ -16,10 +16,11 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // 퀴즈 50문제 생성
 router.post('/generate', async (req, res) => {
   try {
-    const [youtubeDoc, materialDoc] = await Promise.all([
-      db.collection('settings').doc('youtube').get(),
-      db.collection('settings').doc('material').get(),
-    ]);
+const adminId = req.body.adminId || 'default';
+const [youtubeDoc, materialDoc] = await Promise.all([
+  db.collection('settings').doc(adminId).collection('youtube').doc('main').get(),
+  db.collection('settings').doc(adminId).collection('material').doc('main').get(),
+]);
 
     const youtubeUrl = youtubeDoc.exists ? youtubeDoc.data().url : '';
     const materialData = materialDoc.exists ? materialDoc.data() : null;
@@ -97,7 +98,7 @@ const result = JSON.parse(completion.choices[0].message.content);
 
     const allQuestions = rawQuestions.map((q, i) => ({ ...q, id: i + 1 }));
 
-    await db.collection('settings').doc('quiz').set({
+    await db.collection('settings').doc(adminId).collection('quiz').doc('main').set({
       questions: allQuestions,
       generatedAt: new Date(),
     });
@@ -112,7 +113,8 @@ const result = JSON.parse(completion.choices[0].message.content);
 // 랜덤 10문제 뽑아서 가져오기
 router.get('/get', async (req, res) => {
   try {
-    const doc = await db.collection('settings').doc('quiz').get();
+    const { companyId } = req.query;
+const doc = await db.collection('settings').doc(companyId).collection('quiz').doc('main').get();
     if (!doc.exists) {
       return res.status(404).json({ success: false, message: '생성된 퀴즈가 없습니다. 관리자에게 문의하세요.' });
     }
@@ -233,7 +235,8 @@ sgMail.send({
 // 전체 퀴즈 목록 가져오기 (관리자용)
 router.get('/all', async (req, res) => {
   try {
-    const doc = await db.collection('settings').doc('quiz').get();
+    const adminId = req.query.adminId || req.body.adminId;
+const doc = await db.collection('settings').doc(adminId).collection('quiz').doc('main').get();
     if (!doc.exists) {
       return res.status(404).json({ success: false, message: '생성된 퀴즈가 없습니다.' });
     }
@@ -249,7 +252,8 @@ router.get('/all', async (req, res) => {
 // 퀴즈 엑셀 다운로드
 router.get('/download', async (req, res) => {
   try {
-    const doc = await db.collection('settings').doc('quiz').get();
+    const adminId = req.query.adminId;
+const doc = await db.collection('settings').doc(adminId).collection('quiz').doc('main').get();
     if (!doc.exists) {
       return res.status(404).json({ success: false, message: '생성된 퀴즈가 없습니다.' });
     }

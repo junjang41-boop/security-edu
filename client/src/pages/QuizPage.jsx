@@ -19,7 +19,8 @@ function QuizPage() {
 
   // 랜덤 10문제 불러오기
   useEffect(() => {
-    axios.get('https://security-edu-production.up.railway.app/api/quiz/get')
+    const companyId = sessionStorage.getItem('companyId');
+axios.get(`https://security-edu-production.up.railway.app/api/quiz/get?companyId=${companyId}`)
       .then((res) => {
         setQuestions(res.data.questions);
         setLoading(false);

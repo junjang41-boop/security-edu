@@ -5,7 +5,8 @@ const { db } = require('../firebase');
 // 유튜브 URL 가져오기
 router.get('/youtube', async (req, res) => {
   try {
-    const doc = await db.collection('settings').doc('youtube').get();
+    const companyId = req.query.companyId;
+    const doc = await db.collection('settings').doc(companyId).collection('youtube').doc('main').get();
     if (!doc.exists) {
       return res.status(404).json({ success: false, message: '등록된 유튜브 링크가 없습니다.' });
     }
@@ -16,12 +17,11 @@ router.get('/youtube', async (req, res) => {
   }
 });
 
-module.exports = router;
-
 // 교육자료 URL 가져오기
 router.get('/material', async (req, res) => {
   try {
-    const doc = await db.collection('settings').doc('material').get();
+    const companyId = req.query.companyId;
+    const doc = await db.collection('settings').doc(companyId).collection('material').doc('main').get();
     if (!doc.exists) {
       return res.status(404).json({ success: false, message: '등록된 교육자료가 없습니다.' });
     }
@@ -31,3 +31,5 @@ router.get('/material', async (req, res) => {
     res.status(500).json({ success: false, message: '서버 오류' });
   }
 });
+
+module.exports = router;

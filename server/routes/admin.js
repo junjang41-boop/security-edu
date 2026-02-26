@@ -60,11 +60,12 @@ router.post('/upload-material', upload.single('file'), async (req, res) => {
     const fileUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
 
     // Firestore에 저장
-    await db.collection('settings').doc('material').set({
-      fileName: file.originalname,
-      fileUrl,
-      uploadedAt: new Date(),
-    });
+    const adminId = req.body.adminId || 'default';
+await db.collection('settings').doc(adminId).collection('material').doc('main').set({
+  fileName: file.originalname,
+  fileUrl,
+  uploadedAt: new Date(),
+});
 
     res.json({ success: true, message: '업로드 완료', fileUrl });
   } catch (err) {
@@ -84,10 +85,11 @@ router.post('/upload-youtube', async (req, res) => {
       return res.status(400).json({ success: false, message: '유튜브 링크만 등록 가능합니다.' });
     }
 
-    await db.collection('settings').doc('youtube').set({
-      url,
-      updatedAt: new Date(),
-    });
+const adminId = req.body.adminId || 'default';
+await db.collection('settings').doc(adminId).collection('youtube').doc('main').set({
+  url,
+  updatedAt: new Date(),
+});
 
     res.json({ success: true, message: '유튜브 링크 저장 완료' });
   } catch (err) {
@@ -163,6 +165,7 @@ batch.set(docRef, {
     }
     await batch.commit();
 
+await db.collection('settings').doc(req.body.adminId).set({ employeeFileName: file.originalname }, { merge: true });
     res.json({ success: true, message: `${rows.length}명 업로드 완료` });
   } catch (err) {
     console.error(err);
@@ -373,6 +376,24 @@ router.delete('/delete-account', async (req, res) => {
     await db.collection('admins').doc(targetId).delete();
     await db.collection('settings').doc(targetId).delete();
     res.json({ message: '삭제 완료' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get('/saved-info', async (req, res) => {
+  const { adminId } = req.query;
+  try {
+    const [materialDoc, youtubeDoc, settingDoc] = await Promise.all([
+      db.collection('settings').doc(adminId).collection('material').doc('main').get(),
+      db.collection('settings').doc(adminId).collection('youtube').doc('main').get(),
+      db.collection('settings').doc(adminId).get(),
+    ]);
+    res.json({
+      materialFileName: materialDoc.exists ? materialDoc.data().fileName : '',
+      youtubeUrl: youtubeDoc.exists ? youtubeDoc.data().url : '',
+      employeeFileName: settingDoc.exists ? (settingDoc.data().employeeFileName || '') : '',
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

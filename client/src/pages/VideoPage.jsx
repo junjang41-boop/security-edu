@@ -29,7 +29,8 @@ function VideoPage() {
 
   // 유튜브 URL 불러오기
   useEffect(() => {
-    axios.get('https://security-edu-production.up.railway.app/api/education/youtube')
+    const companyId = sessionStorage.getItem('companyId');
+axios.get(`https://security-edu-production.up.railway.app/api/education/youtube?companyId=${companyId}`)
       .then((res) => {
         const id = getYoutubeId(res.data.url);
         if (id) setVideoId(id);

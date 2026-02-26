@@ -32,9 +32,22 @@ const [testEmailMessage, setTestEmailMessage] = useState('');
 
 const setMessage = (key, msg) => setMessages((prev) => ({ ...prev, [key]: msg }));
 
+const [savedMaterial, setSavedMaterial] = useState('');
+const [savedYoutube, setSavedYoutube] = useState('');
+const [savedEmployee, setSavedEmployee] = useState('');
+
 useEffect(() => {
   axios.get(`${API}/api/admin/site-config?adminId=${adminId}`)
     .then(res => setSiteConfig({ systemName: res.data.systemName || '' }))
+    .catch(() => {});
+
+  // 저장된 파일 정보 불러오기
+  axios.get(`${API}/api/admin/saved-info?adminId=${adminId}`)
+    .then(res => {
+      setSavedMaterial(res.data.materialFileName || '');
+      setSavedYoutube(res.data.youtubeUrl || '');
+      setSavedEmployee(res.data.employeeFileName || '');
+    })
     .catch(() => {});
 }, []);
 
@@ -106,7 +119,8 @@ const handleDeleteAccount = async (targetId) => {
     const formData = new FormData();
     formData.append('file', materialFile);
     try {
-      const res = await axios.post(`${API}/api/admin/upload-material`, formData);
+      const res = formData.append('adminId', adminId);
+await axios.post(`${API}/api/admin/upload-material`, formData);
       setMessage('material', '✅ ' + res.data.message);
     } catch (err) {
       setMessage('material', '❌ ' + (err.response?.data?.message || '업로드 실패'));
@@ -116,7 +130,7 @@ const handleDeleteAccount = async (targetId) => {
   const handleYoutubeUpload = async () => {
     if (!youtubeUrl) return setMessage('youtube', '링크를 입력해주세요.');
     try {
-      const res = await axios.post(`${API}/api/admin/upload-youtube`, { url: youtubeUrl });
+      const res = await axios.post(`${API}/api/admin/upload-youtube`, { url: youtubeUrl, adminId });
       setMessage('youtube', '✅ ' + res.data.message);
     } catch (err) {
       setMessage('youtube', '❌ ' + (err.response?.data?.message || '저장 실패'));
@@ -147,7 +161,7 @@ const handleEmployeeUpload = async () => {
       });
     }, 900);
     try {
-      const res = await axios.post(`${API}/api/quiz/generate`);
+      const res = await axios.post(`${API}/api/quiz/generate`, { adminId });
       clearInterval(interval);
       setQuizProgress(100);
       setMessage('quiz', `✅ ${res.data.total}문항 생성 완료!`);
@@ -162,7 +176,7 @@ const handleEmployeeUpload = async () => {
 
   const handleViewQuiz = async () => {
     try {
-      const res = await axios.get(`${API}/api/quiz/all`);
+      const res = await axios.get(`${API}/api/quiz/all?adminId=${adminId}`);
       setQuizList(res.data.questions);
     } catch {
       alert('생성된 퀴즈가 없습니다. 먼저 퀴즈를 생성해주세요.');
@@ -180,7 +194,7 @@ const handleEmployeeUpload = async () => {
     }
   };
 
-  const handleDownloadQuiz = () => window.open(`${API}/api/quiz/download`, '_blank');
+  const handleDownloadQuiz = () => window.open(`${API}/api/quiz/download?adminId=${adminId}`, '_blank');
   const handleDownload = () => window.open(`${API}/api/admin/download-employees`, '_blank');
 const thStyle = { padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid #ddd' };
 const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
@@ -266,6 +280,7 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
           <input type="file" accept=".pdf,.ppt,.pptx" onChange={(e) => setMaterialFile(e.target.files[0])} style={styles.fileInput} />
           <p style={styles.guide}>보안교육자료의 경우 <b>100MB 이하의 PDF, PPT 파일만 업로드 해주세요.</b></p>
           <button style={styles.button} onClick={handleMaterialUpload}>업로드</button>
+          {savedMaterial && <p style={{ fontSize: '13px', color: '#27ae60' }}>📎 현재 파일: {savedMaterial}</p>}
           {messages.material && <p style={styles.message}>{messages.material}</p>}
         </div>
 
@@ -274,6 +289,7 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
           <h3 style={styles.cardTitle}>🎬 유튜브 영상 링크 등록</h3>
           <input type="text" placeholder="https://www.youtube.com/..." value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} style={styles.input} />
           <p style={styles.guide}><b>유튜브 영상 링크만</b> 올려주세요.</p>
+          {savedYoutube && <p style={{ fontSize: '13px', color: '#27ae60' }}>🔗 현재 링크: {savedYoutube}</p>}
           <button style={styles.button} onClick={handleYoutubeUpload}>저장</button>
           {messages.youtube && <p style={styles.message}>{messages.youtube}</p>}
         </div>
@@ -285,6 +301,7 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
           <p style={styles.guide}><b>인원명부의 경우 Excel 파일만 업로드해주세요.</b></p>
           <p style={styles.guide}>컬럼 순서: 사번 / 이름 / 이메일 / 보안교육이수여부</p>
           <button style={styles.button} onClick={handleEmployeeUpload}>업로드</button>
+          {savedEmployee && <p style={{ fontSize: '13px', color: '#27ae60' }}>👥 현재 파일: {savedEmployee}</p>}
           {messages.employee && <p style={styles.message}>{messages.employee}</p>}
         </div>
 
