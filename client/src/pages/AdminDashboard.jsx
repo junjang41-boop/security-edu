@@ -50,6 +50,7 @@ const handleSaveConfig = async () => {
 
 const handleCreateAccount = async () => {
   const { id, companyName } = newAccount;
+  console.log('계정생성 시도:', { id, companyName, adminId });
   if (!id || !companyName) return setAccountMessage('모든 항목을 입력해주세요.');
   try {
     await axios.post(`${API}/api/admin/create-account`, {
