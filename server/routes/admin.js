@@ -27,7 +27,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: '아이디 또는 비밀번호가 틀렸습니다.' });
     }
     const data = doc.data();
-    res.json({ success: true, isSuper: false, companyName: data.companyName, adminId: id });
+    res.json({ success: true, isSuper: false, companyName: data.companyName, adminId: id, mustChangePassword: data.mustChangePassword || false });
   } catch (err) {
     res.status(500).json({ success: false, message: '서버 오류' });
   }

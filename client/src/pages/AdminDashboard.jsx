@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const API = 'https://security-edu-production.up.railway.app';
 
 function AdminDashboard() {
+const navigate = useNavigate();
 const adminId = sessionStorage.getItem('adminId');
 console.log('adminId from session:', adminId);
 const isSuper = sessionStorage.getItem('isSuper') === 'true';
@@ -178,6 +180,9 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
       <div className="page-wrapper" style={styles.pageWrapper}>
         <h2 style={styles.title}>🛡️ 교육 관리자 대시보드</h2>
 <p style={{ fontSize: '14px', color: '#888', marginTop: '-16px' }}>{companyName}</p>
+<button onClick={() => navigate('/')} style={{ alignSelf: 'flex-start', background: 'none', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 14px', fontSize: '13px', color: '#555', cursor: 'pointer' }}>
+  ← 홈으로
+</button>
 
 {/* 계정 생성 - 슈퍼관리자만 표시 */}
 {isSuper && (
