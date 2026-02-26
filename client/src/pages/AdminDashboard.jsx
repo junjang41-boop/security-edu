@@ -14,6 +14,7 @@ const [configMessage, setConfigMessage] = useState('');
 
 const [newAccount, setNewAccount] = useState({ id: '', password: '', companyName: '' });
 const [accountMessage, setAccountMessage] = useState('');
+const [accountList, setAccountList] = useState([]);
 
 const [messages, setMessages] = useState({
   material: '', youtube: '', employee: '', quiz: '',
@@ -47,17 +48,27 @@ const handleSaveConfig = async () => {
 };
 
 const handleCreateAccount = async () => {
-  const { id, password, companyName } = newAccount;
-  if (!id || !password || !companyName) return setAccountMessage('모든 항목을 입력해주세요.');
+  const { id, companyName } = newAccount;
+  if (!id || !companyName) return setAccountMessage('모든 항목을 입력해주세요.');
   try {
     await axios.post(`${API}/api/admin/create-account`, {
-      requesterId: adminId,
-      newId: id, password, companyName,
-    });
+  requesterId: adminId,
+  newId: id, password, companyName,
+  initialPassword: newAccount.initialPassword || '',
+});
     setAccountMessage('✅ 계정 생성 완료!');
     setNewAccount({ id: '', password: '', companyName: '' });
   } catch (err) {
     setAccountMessage('❌ ' + (err.response?.data?.message || '생성 실패'));
+  }
+};
+
+const handleLoadAccounts = async () => {
+  try {
+    const res = await axios.get(`${API}/api/admin/accounts?requesterId=${adminId}`);
+    setAccountList(res.data.accounts);
+  } catch {
+    alert('조회 실패');
   }
 };
 
@@ -142,6 +153,8 @@ const handleEmployeeUpload = async () => {
 
   const handleDownloadQuiz = () => window.open(`${API}/api/quiz/download`, '_blank');
   const handleDownload = () => window.open(`${API}/api/admin/download-employees`, '_blank');
+const thStyle = { padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid #ddd' };
+const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
 
   return (
     <div style={styles.container}>
@@ -156,12 +169,38 @@ const handleEmployeeUpload = async () => {
     <p style={styles.guide}>새 회사의 관리자 계정을 생성합니다.</p>
     <input type="text" placeholder="아이디" value={newAccount.id}
       onChange={(e) => setNewAccount(p => ({ ...p, id: e.target.value }))} style={styles.input} />
-    <input type="password" placeholder="비밀번호" value={newAccount.password}
-      onChange={(e) => setNewAccount(p => ({ ...p, password: e.target.value }))} style={styles.input} />
+
     <input type="text" placeholder="회사명 (예: 한솔아이원스(주))" value={newAccount.companyName}
-      onChange={(e) => setNewAccount(p => ({ ...p, companyName: e.target.value }))} style={styles.input} />
-    <button style={{ ...styles.button, backgroundColor: '#2c3e50' }} onClick={handleCreateAccount}>계정 생성</button>
+  onChange={(e) => setNewAccount(p => ({ ...p, companyName: e.target.value }))} style={styles.input} />
+<input type="password" placeholder={`초기 암호 (미입력 시 Hansol123!@#)`} value={newAccount.initialPassword || ''}
+  onChange={(e) => setNewAccount(p => ({ ...p, initialPassword: e.target.value }))} style={styles.input} />
+<button style={{ ...styles.button, backgroundColor: '#2c3e50' }} onClick={handleCreateAccount}>계정 생성</button>
     {accountMessage && <p style={styles.message}>{accountMessage}</p>}
+    <button style={{ ...styles.button, backgroundColor: '#7f8c8d' }} onClick={handleLoadAccounts}>
+  계정 목록 보기
+</button>
+{accountList.length > 0 && (
+  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', marginTop: '8px' }}>
+    <thead>
+      <tr style={{ backgroundColor: '#f0f2f5' }}>
+        <th style={thStyle}>아이디</th>
+        <th style={thStyle}>회사명</th>
+        <th style={thStyle}>초기암호변경</th>
+      </tr>
+    </thead>
+    <tbody>
+      {accountList.map((acc, i) => (
+        <tr key={i}>
+          <td style={tdStyle}>{acc.id}</td>
+          <td style={tdStyle}>{acc.companyName}</td>
+          <td style={{ ...tdStyle, color: acc.mustChangePassword ? '#e74c3c' : '#27ae60' }}>
+            {acc.mustChangePassword ? '미변경' : '변경완료'}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+)}
   </div>
 )}
 

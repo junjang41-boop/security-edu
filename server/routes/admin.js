@@ -288,18 +288,63 @@ router.get('/companies', async (req, res) => {
 
 // 계정 생성 (슈퍼관리자만)
 router.post('/create-account', async (req, res) => {
-  const { requesterId, newId, password, companyName } = req.body;
+  const { requesterId, newId, password, companyName, initialPassword } = req.body;
   if (requesterId !== process.env.ADMIN_ID) {
     return res.status(403).json({ message: '권한이 없습니다.' });
   }
   try {
     const existing = await db.collection('admins').doc(newId).get();
     if (existing.exists) return res.status(400).json({ message: '이미 존재하는 아이디입니다.' });
-    await db.collection('admins').doc(newId).set({ password, companyName });
+    const initPw = initialPassword || 'Hansol123!@#';
+    await db.collection('admins').doc(newId).set({
+      password: initPw,
+      companyName,
+      mustChangePassword: true,
+    });
     await db.collection('settings').doc(newId).set({ companyName, systemName: '교육 수강 시스템' });
     res.json({ message: '계정 생성 완료' });
   } catch (err) {
     res.status(500).json({ message: '계정 생성 실패' });
+  }
+});
+// 계정 목록 조회 (슈퍼관리자만)
+router.get('/accounts', async (req, res) => {
+  const { requesterId } = req.query;
+  if (requesterId !== process.env.ADMIN_ID) {
+    return res.status(403).json({ message: '권한이 없습니다.' });
+  }
+  try {
+    const snapshot = await db.collection('admins').get();
+    const accounts = snapshot.docs.map(doc => ({
+      id: doc.id,
+      companyName: doc.data().companyName,
+      mustChangePassword: doc.data().mustChangePassword || false,
+    }));
+    res.json({ accounts });
+  } catch (err) {
+    res.status(500).json({ message: '조회 실패' });
+  }
+});
+
+// 암호 변경
+router.post('/change-password', async (req, res) => {
+  const { adminId, currentPassword, newPassword } = req.body;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+  if (!passwordRegex.test(newPassword)) {
+    return res.status(400).json({ message: '암호는 8자리 이상, 대문자/소문자/숫자/특수문자(!@#$%^&*)를 모두 포함해야 합니다.' });
+  }
+  try {
+    const doc = await db.collection('admins').doc(adminId).get();
+    if (!doc.exists || doc.data().password !== currentPassword) {
+      return res.status(401).json({ message: '현재 암호가 올바르지 않습니다.' });
+    }
+    await db.collection('admins').doc(adminId).update({
+      password: newPassword,
+      mustChangePassword: false,
+    });
+    res.json({ message: '암호 변경 완료' });
+  } catch (err) {
+    res.status(500).json({ message: '암호 변경 실패' });
   }
 });
 
