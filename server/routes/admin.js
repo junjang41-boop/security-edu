@@ -266,15 +266,19 @@ router.get('/companies', async (req, res) => {
   try {
     const snapshot = await db.collection('admins').get();
 
-    // 회사명 기준으로 그룹핑
     const companyMap = {};
-    snapshot.docs.forEach(doc => {
-      const { companyName, systemName } = doc.data();
-      if (!companyMap[companyName]) companyMap[companyName] = [];
-      companyMap[companyName].push({ adminId: doc.id, systemName: systemName || '' });
-    });
+    for (const doc of snapshot.docs) {
+      const { companyName } = doc.data();
+      const settingDoc = await db.collection('settings').doc(doc.id).get();
+      const systemName = settingDoc.exists ? (settingDoc.data().systemName || '') : '';
 
-    // [{ companyName, educations: [{adminId, systemName}] }] 형태로 반환
+      // 교육 이름 미설정된 건 제외
+      if (!systemName || systemName === '[교육 이름을 설정해주세요]') continue;
+
+      if (!companyMap[companyName]) companyMap[companyName] = [];
+      companyMap[companyName].push({ adminId: doc.id, systemName });
+    }
+
     const companies = Object.entries(companyMap).map(([companyName, educations]) => ({
       companyName,
       educations,
