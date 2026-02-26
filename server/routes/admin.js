@@ -12,15 +12,24 @@ const upload = multer({
 });
 
 // ─── 관리자 로그인 ──────────────────────────────────
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { id, password } = req.body;
-  if (
-    id === process.env.ADMIN_ID &&
-    password === process.env.ADMIN_PASSWORD
-  ) {
-    res.json({ success: true, message: '로그인 성공' });
-  } else {
-    res.status(401).json({ success: false, message: '아이디 또는 비밀번호가 틀렸습니다.' });
+
+  // 슈퍼관리자(admin)는 .env로 체크
+  if (id === process.env.ADMIN_ID && password === process.env.ADMIN_PASSWORD) {
+    return res.json({ success: true, isSuper: true, companyName: '슈퍼관리자' });
+  }
+
+  // 일반 관리자는 Firestore에서 체크
+  try {
+    const doc = await db.collection('admins').doc(id).get();
+    if (!doc.exists || doc.data().password !== password) {
+      return res.status(401).json({ success: false, message: '아이디 또는 비밀번호가 틀렸습니다.' });
+    }
+    const data = doc.data();
+    res.json({ success: true, isSuper: false, companyName: data.companyName, adminId: id });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '서버 오류' });
   }
 });
 
@@ -144,12 +153,13 @@ router.post('/upload-employees', upload.single('file'), async (req, res) => {
     const batch = db.batch();
     for (const row of cleanRows) {
       const docRef = db.collection('employees').doc(String(row['사번']));
-      batch.set(docRef, {
-        사번: String(row['사번']) || '',
-        이름: String(row['이름'] || ''),
-        이메일: String(row['이메일'] || ''),
-        보안교육이수여부: String(row['보안교육이수여부'] || '미완료'),
-      });
+batch.set(docRef, {
+  사번: String(row['사번']) || '',
+  이름: String(row['이름'] || ''),
+  이메일: String(row['이메일'] || ''),
+  보안교육이수여부: String(row['보안교육이수여부'] || '미완료'),
+  companyId: req.body.adminId || '',
+});
     }
     await batch.commit();
 
@@ -230,11 +240,10 @@ router.post('/test-email', async (req, res) => {
 });
 // ✅ 시스템 설정 불러오기
 router.get('/site-config', async (req, res) => {
+  const { adminId } = req.query;
   try {
-    const doc = await db.collection('settings').doc('siteConfig').get();
-    if (!doc.exists) {
-      return res.json({ companyName: '', systemName: '' });
-    }
+    const doc = await db.collection('settings').doc(adminId || 'siteConfig').get();
+    if (!doc.exists) return res.json({ companyName: '', systemName: '' });
     res.json(doc.data());
   } catch (err) {
     res.status(500).json({ message: '설정 불러오기 실패' });
@@ -243,12 +252,54 @@ router.get('/site-config', async (req, res) => {
 
 // ✅ 시스템 설정 저장
 router.post('/site-config', async (req, res) => {
+  const { adminId, systemName } = req.body;
   try {
-    const { companyName, systemName } = req.body;
-    await db.collection('settings').doc('siteConfig').set({ companyName, systemName });
+    await db.collection('settings').doc(adminId).set({ systemName }, { merge: true });
     res.json({ message: '저장 완료' });
   } catch (err) {
     res.status(500).json({ message: '저장 실패' });
+  }
+});
+
+// 회사 목록 조회 (임직원 로그인 선택박스용)
+router.get('/companies', async (req, res) => {
+  try {
+    const snapshot = await db.collection('admins').get();
+
+    // 회사명 기준으로 그룹핑
+    const companyMap = {};
+    snapshot.docs.forEach(doc => {
+      const { companyName, systemName } = doc.data();
+      if (!companyMap[companyName]) companyMap[companyName] = [];
+      companyMap[companyName].push({ adminId: doc.id, systemName: systemName || '' });
+    });
+
+    // [{ companyName, educations: [{adminId, systemName}] }] 형태로 반환
+    const companies = Object.entries(companyMap).map(([companyName, educations]) => ({
+      companyName,
+      educations,
+    }));
+
+    res.json({ companies });
+  } catch (err) {
+    res.status(500).json({ message: '조회 실패' });
+  }
+});
+
+// 계정 생성 (슈퍼관리자만)
+router.post('/create-account', async (req, res) => {
+  const { requesterId, newId, password, companyName } = req.body;
+  if (requesterId !== process.env.ADMIN_ID) {
+    return res.status(403).json({ message: '권한이 없습니다.' });
+  }
+  try {
+    const existing = await db.collection('admins').doc(newId).get();
+    if (existing.exists) return res.status(400).json({ message: '이미 존재하는 아이디입니다.' });
+    await db.collection('admins').doc(newId).set({ password, companyName });
+    await db.collection('settings').doc(newId).set({ companyName, systemName: '교육 수강 시스템' });
+    res.json({ message: '계정 생성 완료' });
+  } catch (err) {
+    res.status(500).json({ message: '계정 생성 실패' });
   }
 });
 

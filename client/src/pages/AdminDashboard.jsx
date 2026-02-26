@@ -5,41 +5,49 @@ const API = 'https://security-edu-production.up.railway.app';
 
 function AdminDashboard() {
   // ✅ 추가: 시스템 설정 state
-  const [siteConfig, setSiteConfig] = useState({ companyName: '', systemName: '' });
-  const [configMessage, setConfigMessage] = useState('');
+const adminId = sessionStorage.getItem('adminId');
+const isSuper = sessionStorage.getItem('isSuper') === 'true';
+const companyName = sessionStorage.getItem('companyName');
 
-  const [materialFile, setMaterialFile] = useState(null);
-  const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [employeeFile, setEmployeeFile] = useState(null);
-  const [messages, setMessages] = useState({
-    material: '', youtube: '', employee: '', quiz: '',
-  });
-  const [quizProgress, setQuizProgress] = useState(0);
-  const [quizLoading, setQuizLoading] = useState(false);
-  const [quizList, setQuizList] = useState([]);
-  const [testEmail, setTestEmail] = useState('');
-  const [testEmailMessage, setTestEmailMessage] = useState('');
+const [siteConfig, setSiteConfig] = useState({ systemName: '' });
+const [configMessage, setConfigMessage] = useState('');
 
-  const setMessage = (key, msg) => setMessages((prev) => ({ ...prev, [key]: msg }));
+// 계정 생성 state (슈퍼관리자만)
+const [newAccount, setNewAccount] = useState({ id: '', password: '', companyName: '' });
+const [accountMessage, setAccountMessage] = useState('');
 
   // ✅ 추가: 기존 설정값 불러오기
-  useEffect(() => {
-    axios.get(`${API}/api/admin/site-config`)
-      .then(res => setSiteConfig(res.data))
-      .catch(() => {});
-  }, []);
+useEffect(() => {
+  axios.get(`${API}/api/admin/site-config?adminId=${adminId}`)
+    .then(res => setSiteConfig({ systemName: res.data.systemName || '' }))
+    .catch(() => {});
+}, []);
 
   // ✅ 추가: 설정 저장
-  const handleSaveConfig = async () => {
-    if (!siteConfig.companyName || !siteConfig.systemName)
-      return setConfigMessage('회사명과 시스템명을 모두 입력해주세요.');
-    try {
-      await axios.post(`${API}/api/admin/site-config`, siteConfig);
-      setConfigMessage('✅ 저장 완료!');
-    } catch {
-      setConfigMessage('❌ 저장 실패');
-    }
-  };
+const handleSaveConfig = async () => {
+  if (!siteConfig.systemName) return setConfigMessage('교육명을 입력해주세요.');
+  try {
+    await axios.post(`${API}/api/admin/site-config`, { adminId, systemName: siteConfig.systemName });
+    setConfigMessage('✅ 저장 완료!');
+  } catch {
+    setConfigMessage('❌ 저장 실패');
+  }
+};
+
+const handleCreateAccount = async () => {
+  const { id, password, companyName } = newAccount;
+  if (!id || !password || !companyName) return setAccountMessage('모든 항목을 입력해주세요.');
+  try {
+    await axios.post(`${API}/api/admin/create-account`, {
+      requesterId: adminId,
+      newId: id, password, companyName,
+    });
+    setAccountMessage('✅ 계정 생성 완료!');
+    setNewAccount({ id: '', password: '', companyName: '' });
+  } catch (err) {
+    setAccountMessage('❌ ' + (err.response?.data?.message || '생성 실패'));
+  }
+};
 
   const handleMaterialUpload = async () => {
     if (!materialFile) return setMessage('material', '파일을 선택해주세요.');
@@ -125,31 +133,34 @@ function AdminDashboard() {
   return (
     <div style={styles.container}>
       <div className="page-wrapper" style={styles.pageWrapper}>
-        <h2 style={styles.title}>🛡️ 보안교육 관리자 대시보드</h2>
+        <h2 style={styles.title}>🛡️ 교육 관리자 대시보드</h2>
+<p style={{ fontSize: '14px', color: '#888', marginTop: '-16px' }}>{companyName}</p>
 
-        {/* ✅ 추가: 시스템 설정 */}
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>⚙️ 시스템 설정</h3>
-          <p style={styles.guide}>메인 로그인 화면에 표시되는 회사명과 시스템명을 설정합니다.</p>
-          <input
-            type="text"
-            placeholder="회사명 (예: 한솔아이원스(주))"
-            value={siteConfig.companyName}
-            onChange={(e) => setSiteConfig(prev => ({ ...prev, companyName: e.target.value }))}
-            style={styles.input}
-          />
-          <input
-            type="text"
-            placeholder="시스템명 (예: 보안교육 수강 시스템)"
-            value={siteConfig.systemName}
-            onChange={(e) => setSiteConfig(prev => ({ ...prev, systemName: e.target.value }))}
-            style={styles.input}
-          />
-          <button style={{ ...styles.button, backgroundColor: '#2c3e50' }} onClick={handleSaveConfig}>
-            저장하기
-          </button>
-          {configMessage && <p style={styles.message}>{configMessage}</p>}
-        </div>
+{/* 계정 생성 - 슈퍼관리자만 표시 */}
+{isSuper && (
+  <div style={styles.card}>
+    <h3 style={styles.cardTitle}>👤 관리자 계정 생성</h3>
+    <p style={styles.guide}>새 회사의 관리자 계정을 생성합니다.</p>
+    <input type="text" placeholder="아이디" value={newAccount.id}
+      onChange={(e) => setNewAccount(p => ({ ...p, id: e.target.value }))} style={styles.input} />
+    <input type="password" placeholder="비밀번호" value={newAccount.password}
+      onChange={(e) => setNewAccount(p => ({ ...p, password: e.target.value }))} style={styles.input} />
+    <input type="text" placeholder="회사명 (예: 한솔아이원스(주))" value={newAccount.companyName}
+      onChange={(e) => setNewAccount(p => ({ ...p, companyName: e.target.value }))} style={styles.input} />
+    <button style={{ ...styles.button, backgroundColor: '#2c3e50' }} onClick={handleCreateAccount}>계정 생성</button>
+    {accountMessage && <p style={styles.message}>{accountMessage}</p>}
+  </div>
+)}
+
+{/* 시스템 설정 */}
+<div style={styles.card}>
+  <h3 style={styles.cardTitle}>⚙️ 시스템 설정</h3>
+  <p style={styles.guide}>메인 로그인 화면에 표시되는 교육명을 설정합니다. (회사명은 계정 생성 시 고정)</p>
+  <input type="text" placeholder="교육명 (예: 보안교육 수강 시스템)" value={siteConfig.systemName}
+    onChange={(e) => setSiteConfig(prev => ({ ...prev, systemName: e.target.value }))} style={styles.input} />
+  <button style={{ ...styles.button, backgroundColor: '#2c3e50' }} onClick={handleSaveConfig}>저장하기</button>
+  {configMessage && <p style={styles.message}>{configMessage}</p>}
+</div>
 
         {/* 보안교육 자료 업로드 */}
         <div style={styles.card}>

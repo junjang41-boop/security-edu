@@ -9,24 +9,35 @@ function EmployeeLogin() {
   const [이름, set이름] = useState('');
   const [error, setError] = useState('');
   // ✅ 추가
-  const [companyName, setCompanyName] = useState('');
   const [systemName, setSystemName] = useState('');
+const [companies, setCompanies] = useState([]);
+const [selectedCompany, setSelectedCompany] = useState('');
+const [selectedEducation, setSelectedEducation] = useState('');
   const navigate = useNavigate();
 
   // ✅ 추가: 시스템 설정 불러오기
   useEffect(() => {
-    axios.get(`${API}/api/admin/site-config`)
-      .then(res => {
-        setCompanyName(res.data.companyName || '');
-        setSystemName(res.data.systemName || '');
-      })
-      .catch(() => {});
-  }, []);
+  axios.get(`${API}/api/admin/companies`)
+    .then(res => setCompanies(res.data.companies))
+    .catch(() => {});
+}, []);
+
+useEffect(() => {
+  if (!selectedEducation) return;
+  axios.get(`${API}/api/admin/site-config?adminId=${selectedEducation}`)
+    .then(res => setSystemName(res.data.systemName || ''))
+    .catch(() => {});
+}, [selectedEducation]);
+
+const displayCompany = selectedCompany || '';
+const currentEducations = companies.find(c => c.companyName === selectedCompany)?.educations || [];
 
   const handleVerify = async () => {
-    if (!사번 || !이름) return setError('사번과 이름을 모두 입력해주세요.');
+    if (!selectedCompany) return setError('회사를 선택해주세요.');
+if (!selectedEducation) return setError('교육을 선택해주세요.');
+if (!사번 || !이름) return setError('사번과 이름을 모두 입력해주세요.');
     try {
-      const res = await axios.post(`${API}/api/auth/verify`, { 사번, 이름 });
+      const res = await axios.post(`${API}/api/auth/verify`, { 사번, 이름, companyId: selectedEducation });
       if (res.data.success) {
         sessionStorage.setItem('employee', JSON.stringify(res.data.employee));
         navigate('/video');
@@ -47,16 +58,46 @@ function EmployeeLogin() {
           <div style={styles.logoArea}>
             <span style={styles.logoIcon}>🛡️</span>
             {/* ✅ 수정: 동적으로 표시 */}
-            <p style={styles.company}>{companyName}</p>
+            <p style={styles.company}>{displayCompany}</p>
             <h2 style={styles.title}>{systemName}</h2>
             <p style={styles.subtitle}>사번과 이름을 입력하여 본인 확인 후 교육을 시작하세요.</p>
           </div>
+<select
+  style={styles.input}
+  value={selectedCompany}
+  onChange={(e) => { setSelectedCompany(e.target.value); setSelectedEducation(''); }}
+>
+  <option value="">회사 선택</option>
+  {companies.map(c => (
+    <option key={c.companyName} value={c.companyName}>{c.companyName}</option>
+  ))}
+</select>
+
+<select
+  style={styles.input}
+  value={selectedEducation}
+  onChange={(e) => setSelectedEducation(e.target.value)}
+  disabled={!selectedCompany}
+>
+  <option value="">교육 선택</option>
+  {currentEducations.map(e => (
+    <option key={e.adminId} value={e.adminId}>{e.systemName}</option>
+  ))}
+</select>
 
           <input style={styles.input} type="text" placeholder="사번" value={사번} onChange={(e) => set사번(e.target.value)} onKeyDown={handleKeyDown} />
           <input style={styles.input} type="text" placeholder="이름" value={이름} onChange={(e) => set이름(e.target.value)} onKeyDown={handleKeyDown} />
 
           {error && <p style={styles.error}>{error}</p>}
-          <button style={styles.button} onClick={handleVerify}>교육 시작하기</button>
+          <button style={styles.button} onClick={handleVerify}>
+  교육 시작하기
+</button>
+<button
+  style={{ background: 'none', border: 'none', color: '#bbb', fontSize: '12px', cursor: 'pointer', marginTop: '4px' }}
+  onClick={() => navigate('/admin')}
+>
+  관리자 페이지
+</button>
         </div>
       </div>
     </div>
