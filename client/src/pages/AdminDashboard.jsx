@@ -114,18 +114,18 @@ const handleDeleteAccount = async (targetId) => {
   }
 };
 
-  const handleMaterialUpload = async () => {
-    if (!materialFile) return setMessage('material', '파일을 선택해주세요.');
-    const formData = new FormData();
-    formData.append('file', materialFile);
-    try {
-      const res = formData.append('adminId', adminId);
-await axios.post(`${API}/api/admin/upload-material`, formData);
-      setMessage('material', '✅ ' + res.data.message);
-    } catch (err) {
-      setMessage('material', '❌ ' + (err.response?.data?.message || '업로드 실패'));
-    }
-  };
+const handleMaterialUpload = async () => {
+  if (!materialFile) return setMessage('material', '파일을 선택해주세요.');
+  const formData = new FormData();
+  formData.append('file', materialFile);
+  formData.append('adminId', adminId);
+  try {
+    const res = await axios.post(`${API}/api/admin/upload-material`, formData);
+    setMessage('material', '✅ ' + res.data.message);
+  } catch (err) {
+    setMessage('material', '❌ ' + (err.response?.data?.message || '업로드 실패'));
+  }
+};
 
   const handleYoutubeUpload = async () => {
     if (!youtubeUrl) return setMessage('youtube', '링크를 입력해주세요.');
