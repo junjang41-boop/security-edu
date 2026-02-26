@@ -366,5 +366,16 @@ router.post('/reset-password', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+router.delete('/delete-account', async (req, res) => {
+  const { requesterId, targetId } = req.body;
+  if (requesterId !== process.env.ADMIN_ID) return res.status(403).json({ message: '권한 없음' });
+  try {
+    await db.collection('admins').doc(targetId).delete();
+    await db.collection('settings').doc(targetId).delete();
+    res.json({ message: '삭제 완료' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;

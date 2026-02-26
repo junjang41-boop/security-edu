@@ -90,6 +90,16 @@ const handleResetPassword = async (targetId) => {
     alert('❌ ' + (err.response?.data?.message || '초기화 실패'));
   }
 };
+const handleDeleteAccount = async (targetId) => {
+  if (!window.confirm(`${targetId} 계정을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+  try {
+    await axios.delete(`${API}/api/admin/delete-account`, { data: { requesterId: adminId, targetId } });
+    alert(`✅ ${targetId} 계정이 삭제되었습니다.`);
+    handleLoadAccounts();
+  } catch (err) {
+    alert('❌ ' + (err.response?.data?.message || '삭제 실패'));
+  }
+};
 
   const handleMaterialUpload = async () => {
     if (!materialFile) return setMessage('material', '파일을 선택해주세요.');
@@ -225,6 +235,12 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
                 >
                   초기화
                 </button>
+                <button
+  onClick={() => handleDeleteAccount(acc.id)}
+  style={{ padding: '4px 10px', backgroundColor: '#c0392b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', marginLeft: '6px' }}
+>
+  삭제
+</button>
               </td>
             </tr>
           ))}
