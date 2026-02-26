@@ -300,7 +300,7 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
         <div style={styles.card}>
           <h3 style={styles.cardTitle}>📄 보안교육 자료 업로드</h3>
           <input type="file" accept=".pdf,.ppt,.pptx" onChange={(e) => setMaterialFile(e.target.files[0])} style={styles.fileInput} />
-          <p style={styles.guide}>보안교육자료의 경우 <b>100MB 이하의 PDF, PPT 파일만 업로드 해주세요.</b></p>
+          <p style={styles.guide}>보안교육자료의 경우 <b>100MB 이하의 PDF 파일만 업로드 해주세요.</b></p>
           <button style={styles.button} onClick={handleMaterialUpload}>업로드</button>
           {savedMaterial && <p style={{ fontSize: '13px', color: '#27ae60' }}>📎 현재 파일: {savedMaterial}</p>}
           {messages.material && <p style={styles.message}>{messages.material}</p>}
@@ -375,13 +375,7 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
           )}
         </div>
 
-        {/* 테스트 이메일 발송 */}
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>📧 테스트 이메일 발송</h3>
-          <input type="email" placeholder="받을 이메일 주소 입력" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} style={styles.input} />
-          <button style={{ ...styles.button, backgroundColor: '#e67e22' }} onClick={handleTestEmail}>테스트 메일 발송</button>
-          {testEmailMessage && <p style={styles.message}>{testEmailMessage}</p>}
-        </div>
+
 
         {/* 이수 현황 다운로드 */}
         <div style={styles.card}>
