@@ -55,7 +55,9 @@ const handleCreateAccount = async () => {
   try {
     await axios.post(`${API}/api/admin/create-account`, {
   requesterId: adminId,
-  newId: id, password, companyName,
+  newId: id,
+  password: newAccount.password || 'Hansol123!@#',
+  companyName,
   initialPassword: newAccount.initialPassword || '',
 });
     setAccountMessage('✅ 계정 생성 완료!');
