@@ -390,11 +390,14 @@ router.get('/saved-info', async (req, res) => {
       db.collection('settings').doc(adminId).collection('youtube').doc('main').get(),
       db.collection('settings').doc(adminId).get(),
     ]);
-    res.json({
-      materialFileName: materialDoc.exists ? materialDoc.data().fileName : '',
-      youtubeUrl: youtubeDoc.exists ? youtubeDoc.data().url : '',
-      employeeFileName: settingDoc.exists ? (settingDoc.data().employeeFileName || '') : '',
-    });
+    const quizDoc = await db.collection('settings').doc(adminId).collection('quiz').doc('main').get();
+res.json({
+  materialFileName: materialDoc.exists ? materialDoc.data().fileName : '',
+  youtubeUrl: youtubeDoc.exists ? youtubeDoc.data().url : '',
+  employeeFileName: settingDoc.exists ? (settingDoc.data().employeeFileName || '') : '',
+  quizTotal: quizDoc.exists ? (quizDoc.data().questions?.length || 0) : 0,
+  quizGeneratedAt: quizDoc.exists ? (quizDoc.data().generatedAt?.toDate?.().toLocaleDateString('ko-KR') || '') : '',
+});
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -35,6 +35,7 @@ const setMessage = (key, msg) => setMessages((prev) => ({ ...prev, [key]: msg })
 const [savedMaterial, setSavedMaterial] = useState('');
 const [savedYoutube, setSavedYoutube] = useState('');
 const [savedEmployee, setSavedEmployee] = useState('');
+const [savedQuizInfo, setSavedQuizInfo] = useState({ total: 0, generatedAt: '' });
 
 useEffect(() => {
   axios.get(`${API}/api/admin/site-config?adminId=${adminId}`)
@@ -44,9 +45,10 @@ useEffect(() => {
   // 저장된 파일 정보 불러오기
   axios.get(`${API}/api/admin/saved-info?adminId=${adminId}`)
     .then(res => {
-      setSavedMaterial(res.data.materialFileName || '');
-      setSavedYoutube(res.data.youtubeUrl || '');
-      setSavedEmployee(res.data.employeeFileName || '');
+setSavedMaterial(res.data.materialFileName || '');
+setSavedYoutube(res.data.youtubeUrl || '');
+setSavedEmployee(res.data.employeeFileName || '');
+setSavedQuizInfo({ total: res.data.quizTotal || 0, generatedAt: res.data.quizGeneratedAt || '' });
     })
     .catch(() => {});
 }, []);
@@ -323,7 +325,11 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
               <p style={styles.progressText}>{Math.round(quizProgress)}% 완료</p>
             </div>
           )}
-          {messages.quiz && <p style={styles.message}>{messages.quiz}</p>}
+          {savedQuizInfo.total > 0 && (
+  <p style={{ fontSize: '13px', color: '#27ae60' }}>
+    ✅ 퀴즈 {savedQuizInfo.total}문항 생성되어 있음! (참고교안: {savedMaterial || '없음'} / 생성일: {savedQuizInfo.generatedAt})
+  </p>
+)}
         </div>
 
         {/* 퀴즈 문제 열람 */}
