@@ -12,9 +12,12 @@ const companyName = sessionStorage.getItem('companyName');
 const [siteConfig, setSiteConfig] = useState({ systemName: '' });
 const [configMessage, setConfigMessage] = useState('');
 
-// 계정 생성 state (슈퍼관리자만)
 const [newAccount, setNewAccount] = useState({ id: '', password: '', companyName: '' });
 const [accountMessage, setAccountMessage] = useState('');
+
+const [messages, setMessages] = useState({
+  material: '', youtube: '', employee: '', quiz: '',
+});
 
   // ✅ 추가: 기존 설정값 불러오기
 useEffect(() => {
@@ -71,10 +74,11 @@ const handleCreateAccount = async () => {
     }
   };
 
-  const handleEmployeeUpload = async () => {
-    if (!employeeFile) return setMessage('employee', '파일을 선택해주세요.');
-    const formData = new FormData();
-    formData.append('file', employeeFile);
+const handleEmployeeUpload = async () => {
+  if (!employeeFile) return setMessage('employee', '파일을 선택해주세요.');
+  const formData = new FormData();
+  formData.append('file', employeeFile);
+  formData.append('adminId', adminId);
     try {
       const res = await axios.post(`${API}/api/admin/upload-employees`, formData);
       setMessage('employee', '✅ ' + res.data.message);
