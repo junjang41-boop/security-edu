@@ -18,7 +18,16 @@ const [accountMessage, setAccountMessage] = useState('');
 const [messages, setMessages] = useState({
   material: '', youtube: '', employee: '', quiz: '',
 });
+const [materialFile, setMaterialFile] = useState(null);
+const [youtubeUrl, setYoutubeUrl] = useState('');
+const [employeeFile, setEmployeeFile] = useState(null);
+const [quizProgress, setQuizProgress] = useState(0);
+const [quizLoading, setQuizLoading] = useState(false);
+const [quizList, setQuizList] = useState([]);
+const [testEmail, setTestEmail] = useState('');
+const [testEmailMessage, setTestEmailMessage] = useState('');
 
+const setMessage = (key, msg) => setMessages((prev) => ({ ...prev, [key]: msg }));
   // ✅ 추가: 기존 설정값 불러오기
 useEffect(() => {
   axios.get(`${API}/api/admin/site-config?adminId=${adminId}`)
