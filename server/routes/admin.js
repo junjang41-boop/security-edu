@@ -62,7 +62,7 @@ router.post('/upload-material', upload.single('file'), async (req, res) => {
     // Firestore에 저장
     const adminId = req.body.adminId || 'default';
 await db.collection('settings').doc(adminId).collection('material').doc('main').set({
-  fileName: file.originalname,
+  fileName: Buffer.from(file.originalname, 'latin1').toString('utf8'),
   fileUrl,
   uploadedAt: new Date(),
 });
