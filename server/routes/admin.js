@@ -228,5 +228,28 @@ router.post('/test-email', async (req, res) => {
     res.status(500).json({ success: false, message: '발송 실패: ' + err.message });
   }
 });
+// ✅ 시스템 설정 불러오기
+router.get('/site-config', async (req, res) => {
+  try {
+    const doc = await db.collection('settings').doc('siteConfig').get();
+    if (!doc.exists) {
+      return res.json({ companyName: '', systemName: '' });
+    }
+    res.json(doc.data());
+  } catch (err) {
+    res.status(500).json({ message: '설정 불러오기 실패' });
+  }
+});
+
+// ✅ 시스템 설정 저장
+router.post('/site-config', async (req, res) => {
+  try {
+    const { companyName, systemName } = req.body;
+    await db.collection('settings').doc('siteConfig').set({ companyName, systemName });
+    res.json({ message: '저장 완료' });
+  } catch (err) {
+    res.status(500).json({ message: '저장 실패' });
+  }
+});
 
 module.exports = router;
