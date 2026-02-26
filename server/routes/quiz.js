@@ -143,13 +143,14 @@ router.post('/submit', async (req, res) => {
     const passed = correct >= 6;
 
     // 퀴즈 결과 저장
-    await db.collection('quiz_results').add({
-      사번: employee.사번,
-      이름: employee.이름,
-      점수: correct,
-      합격여부: passed ? '합격' : '불합격',
-      응시일시: new Date(),
-    });
+await db.collection('quiz_results').add({
+  사번: employee.사번,
+  이름: employee.이름,
+  점수: correct,
+  합격여부: passed ? '합격' : '불합격',
+  응시일시: new Date(),
+  companyId: employee.companyId,
+});
 
  // 합격 시 처리
     if (passed) {

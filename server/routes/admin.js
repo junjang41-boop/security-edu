@@ -176,10 +176,11 @@ await db.collection('settings').doc(req.body.adminId).set({ employeeFileName: Bu
 // ─── 이수 현황 엑셀 다운로드 ────────────────────────
 router.get('/download-employees', async (req, res) => {
   try {
-    const [employeesSnapshot, resultsSnapshot] = await Promise.all([
-      db.collection('employees').get(),
-      db.collection('quiz_results').get(),
-    ]);
+    const { adminId } = req.query;
+const [employeesSnapshot, resultsSnapshot] = await Promise.all([
+  db.collection('employees').where('companyId', '==', adminId).get(),
+  db.collection('quiz_results').where('companyId', '==', adminId).get(),
+]);
 
     // 합격한 결과만 사번 기준으로 이수일시 맵 생성
     const resultMap = {};

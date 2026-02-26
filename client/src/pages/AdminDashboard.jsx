@@ -195,7 +195,7 @@ const handleEmployeeUpload = async () => {
   };
 
   const handleDownloadQuiz = () => window.open(`${API}/api/quiz/download?adminId=${adminId}`, '_blank');
-  const handleDownload = () => window.open(`${API}/api/admin/download-employees`, '_blank');
+  const handleDownload = () => window.open(`${API}/api/admin/download-employees?adminId=${adminId}`, '_blank');
 const thStyle = { padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid #ddd' };
 const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
 
