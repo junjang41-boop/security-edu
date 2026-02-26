@@ -289,7 +289,8 @@ router.get('/companies', async (req, res) => {
 // 계정 생성 (슈퍼관리자만)
 router.post('/create-account', async (req, res) => {
   const { requesterId, newId, password, companyName, initialPassword } = req.body;
-  if (requesterId !== process.env.ADMIN_ID) {
+console.log('requesterId:', requesterId, '| ADMIN_ID:', process.env.ADMIN_ID);
+if (requesterId !== process.env.ADMIN_ID) {
     return res.status(403).json({ message: '권한이 없습니다.' });
   }
   try {
