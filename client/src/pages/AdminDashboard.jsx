@@ -6,6 +6,7 @@ const API = 'https://security-edu-production.up.railway.app';
 function AdminDashboard() {
   // ✅ 추가: 시스템 설정 state
 const adminId = sessionStorage.getItem('adminId');
+console.log('adminId from session:', adminId);
 const isSuper = sessionStorage.getItem('isSuper') === 'true';
 const companyName = sessionStorage.getItem('companyName');
 
