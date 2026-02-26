@@ -345,6 +345,7 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
               <p style={styles.progressText}>{Math.round(quizProgress)}% 완료</p>
             </div>
           )}
+          {messages.quiz && <p style={styles.message}>{messages.quiz}</p>}
           {savedQuizInfo.total > 0 && (
   <p style={{ fontSize: '13px', color: '#27ae60' }}>
     ✅ 퀴즈 {savedQuizInfo.total}문항 생성되어 있음! (참고교안: {savedMaterial || '없음'} / 생성일: {savedQuizInfo.generatedAt})
