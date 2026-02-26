@@ -154,7 +154,7 @@ router.post('/submit', async (req, res) => {
  // 합격 시 처리
     if (passed) {
       // 인원명부 자동 업데이트
-      await db.collection('employees').doc(String(employee.사번)).update({
+      await db.collection('employees').doc(`${employee.companyId}_${String(employee.사번)}`).update({
         보안교육이수여부: '완료',
       });
       console.log(`${employee.이름}(${employee.사번}) 이수 완료 처리됨`);

@@ -6,7 +6,7 @@ router.post('/verify', async (req, res) => {
   try {
     const { 사번, 이름, companyId } = req.body;
 
-    const docRef = db.collection('employees').doc(String(사번));
+   const docRef = db.collection('employees').doc(`${companyId}_${String(사번)}`);
     const doc = await docRef.get();
 
     if (!doc.exists) {

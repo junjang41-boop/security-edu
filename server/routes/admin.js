@@ -154,7 +154,7 @@ router.post('/upload-employees', upload.single('file'), async (req, res) => {
     // Firestore에 저장
     const batch = db.batch();
     for (const row of cleanRows) {
-      const docRef = db.collection('employees').doc(String(row['사번']));
+      const docRef = db.collection('employees').doc(`${req.body.adminId}_${String(row['사번'])}`);
 batch.set(docRef, {
   사번: String(row['사번']) || '',
   이름: String(row['이름'] || ''),
@@ -165,7 +165,7 @@ batch.set(docRef, {
     }
     await batch.commit();
 
-await db.collection('settings').doc(req.body.adminId).set({ employeeFileName: file.originalname }, { merge: true });
+await db.collection('settings').doc(req.body.adminId).set({ employeeFileName: Buffer.from(file.originalname, 'latin1').toString('utf8') }, { merge: true });
     res.json({ success: true, message: `${rows.length}명 업로드 완료` });
   } catch (err) {
     console.error(err);
