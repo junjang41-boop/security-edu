@@ -36,6 +36,8 @@ const [savedMaterial, setSavedMaterial] = useState('');
 const [savedYoutube, setSavedYoutube] = useState('');
 const [savedEmployee, setSavedEmployee] = useState('');
 const [savedQuizInfo, setSavedQuizInfo] = useState({ total: 0, generatedAt: '' });
+const [selectedAccountInfo, setSelectedAccountInfo] = useState(null);
+const [accountInfoLoading, setAccountInfoLoading] = useState(false);
 
 useEffect(() => {
   axios.get(`${API}/api/admin/site-config?adminId=${adminId}`)
@@ -113,6 +115,18 @@ const handleDeleteAccount = async (targetId) => {
     handleLoadAccounts();
   } catch (err) {
     alert('❌ ' + (err.response?.data?.message || '삭제 실패'));
+  }
+};
+const handleViewAccountInfo = async (targetId, targetCompany) => {
+  setAccountInfoLoading(true);
+  setSelectedAccountInfo({ id: targetId, companyName: targetCompany });
+  try {
+    const res = await axios.get(`${API}/api/admin/account-info?requesterId=${adminId}&targetId=${targetId}`);
+    setSelectedAccountInfo({ id: targetId, companyName: targetCompany, ...res.data });
+  } catch {
+    setSelectedAccountInfo({ id: targetId, companyName: targetCompany, error: true });
+  } finally {
+    setAccountInfoLoading(false);
   }
 };
 
@@ -252,6 +266,12 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
                   초기화
                 </button>
                 <button
+  onClick={() => handleViewAccountInfo(acc.id, acc.companyName)}
+  style={{ padding: '4px 10px', backgroundColor: '#2980b9', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', marginLeft: '6px' }}
+>
+  상세
+</button>
+                <button
   onClick={() => handleDeleteAccount(acc.id)}
   style={{ padding: '4px 10px', backgroundColor: '#c0392b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', marginLeft: '6px' }}
 >
@@ -369,7 +389,29 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
           <p style={styles.guide}>현재까지 업데이트된 인원명부를 엑셀로 다운로드합니다.</p>
           <button style={{ ...styles.button, backgroundColor: '#27ae60' }} onClick={handleDownload}>엑셀 다운로드</button>
         </div>
-
+{selectedAccountInfo && (
+  <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+    <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '32px', width: '480px', maxWidth: '90%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <h3 style={{ fontSize: '18px', color: '#333' }}>📋 {selectedAccountInfo.companyName} ({selectedAccountInfo.id})</h3>
+      {accountInfoLoading ? (
+        <p>불러오는 중...</p>
+      ) : selectedAccountInfo.error ? (
+        <p style={{ color: '#e74c3c' }}>불러오기 실패</p>
+      ) : !selectedAccountInfo.systemName ? (
+        <p style={{ color: '#e74c3c' }}>⚠️ 초기 저장 안되어있음!</p>
+      ) : (
+        <>
+          <p style={{ fontSize: '14px' }}>🎓 교육명: {selectedAccountInfo.systemName}</p>
+          <p style={{ fontSize: '14px' }}>📄 교육자료: {selectedAccountInfo.materialFileName || '❌ 없음'}</p>
+          <p style={{ fontSize: '14px' }}>🎬 유튜브: {selectedAccountInfo.youtubeUrl || '❌ 없음'}</p>
+          <p style={{ fontSize: '14px' }}>👥 인원명부: {selectedAccountInfo.employeeFileName || '❌ 없음'}</p>
+          <p style={{ fontSize: '14px' }}>🧠 퀴즈: {selectedAccountInfo.quizTotal ? `✅ ${selectedAccountInfo.quizTotal}문항 (${selectedAccountInfo.quizGeneratedAt})` : '❌ 미생성'}</p>
+        </>
+      )}
+      <button onClick={() => setSelectedAccountInfo(null)} style={{ padding: '10px', backgroundColor: '#888', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>닫기</button>
+    </div>
+  </div>
+)}
       </div>
     </div>
   );

@@ -403,4 +403,27 @@ res.json({
   }
 });
 
+router.get('/account-info', async (req, res) => {
+  const { requesterId, targetId } = req.query;
+  if (requesterId !== process.env.ADMIN_ID) return res.status(403).json({ message: '권한 없음' });
+  try {
+    const [settingDoc, materialDoc, youtubeDoc, quizDoc] = await Promise.all([
+      db.collection('settings').doc(targetId).get(),
+      db.collection('settings').doc(targetId).collection('material').doc('main').get(),
+      db.collection('settings').doc(targetId).collection('youtube').doc('main').get(),
+      db.collection('settings').doc(targetId).collection('quiz').doc('main').get(),
+    ]);
+    res.json({
+      systemName: settingDoc.exists ? settingDoc.data().systemName : '',
+      materialFileName: materialDoc.exists ? materialDoc.data().fileName : '',
+      youtubeUrl: youtubeDoc.exists ? youtubeDoc.data().url : '',
+      employeeFileName: settingDoc.exists ? (settingDoc.data().employeeFileName || '') : '',
+      quizTotal: quizDoc.exists ? (quizDoc.data().questions?.length || 0) : 0,
+      quizGeneratedAt: quizDoc.exists ? (quizDoc.data().generatedAt?.toDate?.().toLocaleDateString('ko-KR') || '') : '',
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
