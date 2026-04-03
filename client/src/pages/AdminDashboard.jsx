@@ -5,143 +5,145 @@ import { useNavigate } from 'react-router-dom';
 const API = 'http://192.168.118.164:4000';
 
 function AdminDashboard() {
-const navigate = useNavigate();
-const adminId = sessionStorage.getItem('adminId');
-console.log('adminId from session:', adminId);
-const isSuper = sessionStorage.getItem('isSuper') === 'true';
-const companyName = sessionStorage.getItem('companyName');
+  const navigate = useNavigate();
+  const adminId = sessionStorage.getItem('adminId');
+  console.log('adminId from session:', adminId);
+  const isSuper = sessionStorage.getItem('isSuper') === 'true';
+  const companyName = sessionStorage.getItem('companyName');
 
-const [siteConfig, setSiteConfig] = useState({ systemName: '' });
-const [configMessage, setConfigMessage] = useState('');
+  const [siteConfig, setSiteConfig] = useState({ systemName: '' });
+  const [configMessage, setConfigMessage] = useState('');
 
-const [newAccount, setNewAccount] = useState({ id: '', password: '', companyName: '' });
-const [accountMessage, setAccountMessage] = useState('');
-const [accountList, setAccountList] = useState([]);
+  const [newAccount, setNewAccount] = useState({ id: '', password: '', companyName: '' });
+  const [accountMessage, setAccountMessage] = useState('');
+  const [accountList, setAccountList] = useState([]);
 
-const [messages, setMessages] = useState({
-  material: '', youtube: '', employee: '', quiz: '',
-});
-const [materialFile, setMaterialFile] = useState(null);
-const [youtubeUrl, setYoutubeUrl] = useState('');
-const [employeeFile, setEmployeeFile] = useState(null);
-const [quizProgress, setQuizProgress] = useState(0);
-const [quizLoading, setQuizLoading] = useState(false);
-const [quizList, setQuizList] = useState([]);
-const [testEmail, setTestEmail] = useState('');
-const [testEmailMessage, setTestEmailMessage] = useState('');
+  const [messages, setMessages] = useState({
+    material: '', youtube: '', employee: '', quiz: '',
+  });
+  const [materialFile, setMaterialFile] = useState(null);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [employeeFile, setEmployeeFile] = useState(null);
+  const [quizProgress, setQuizProgress] = useState(0);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [quizList, setQuizList] = useState([]);
+  const [testEmail, setTestEmail] = useState('');
+  const [testEmailMessage, setTestEmailMessage] = useState('');
 
-const setMessage = (key, msg) => setMessages((prev) => ({ ...prev, [key]: msg }));
+  const setMessage = (key, msg) => setMessages((prev) => ({ ...prev, [key]: msg }));
 
-const [savedMaterial, setSavedMaterial] = useState('');
-const [savedYoutube, setSavedYoutube] = useState('');
-const [savedEmployee, setSavedEmployee] = useState('');
-const [savedQuizInfo, setSavedQuizInfo] = useState({ total: 0, generatedAt: '' });
-const [selectedAccountInfo, setSelectedAccountInfo] = useState(null);
-const [accountInfoLoading, setAccountInfoLoading] = useState(false);
+  const [savedMaterial, setSavedMaterial] = useState('');
+  const [savedYoutube, setSavedYoutube] = useState('');
+  const [savedEmployee, setSavedEmployee] = useState('');
+  const [savedQuizInfo, setSavedQuizInfo] = useState({ total: 0, generatedAt: '' });
+  const [selectedAccountInfo, setSelectedAccountInfo] = useState(null);
+  const [accountInfoLoading, setAccountInfoLoading] = useState(false);
 
-useEffect(() => {
-  axios.get(`${API}/api/admin/site-config?adminId=${adminId}`)
-    .then(res => setSiteConfig({ systemName: res.data.systemName || '' }))
-    .catch(() => {});
+  // 초기화 관련
+  const [resetSabun, setResetSabun] = useState('');
+  const [resetEmployeeMessage, setResetEmployeeMessage] = useState('');
+  const [resetAllMessage, setResetAllMessage] = useState('');
 
-  // 저장된 파일 정보 불러오기
-  axios.get(`${API}/api/admin/saved-info?adminId=${adminId}`)
-    .then(res => {
-setSavedMaterial(res.data.materialFileName || '');
-setSavedYoutube(res.data.youtubeUrl || '');
-setSavedEmployee(res.data.employeeFileName || '');
-setSavedQuizInfo({ total: res.data.quizTotal || 0, generatedAt: res.data.quizGeneratedAt || '' });
-    })
-    .catch(() => {});
-}, []);
+  useEffect(() => {
+    axios.get(`${API}/api/admin/site-config?adminId=${adminId}`)
+      .then(res => setSiteConfig({ systemName: res.data.systemName || '' }))
+      .catch(() => {});
 
-const handleSaveConfig = async () => {
-  if (!siteConfig.systemName) return setConfigMessage('교육명을 입력해주세요.');
-  try {
-    await axios.post(`${API}/api/admin/site-config`, { adminId, systemName: siteConfig.systemName });
-    setConfigMessage('✅ 저장 완료!');
-  } catch {
-    setConfigMessage('❌ 저장 실패');
-  }
-};
+    axios.get(`${API}/api/admin/saved-info?adminId=${adminId}`)
+      .then(res => {
+        setSavedMaterial(res.data.materialFileName || '');
+        setSavedYoutube(res.data.youtubeUrl || '');
+        setSavedEmployee(res.data.employeeFileName || '');
+        setSavedQuizInfo({ total: res.data.quizTotal || 0, generatedAt: res.data.quizGeneratedAt || '' });
+      })
+      .catch(() => {});
+  }, []);
 
-const handleCreateAccount = async () => {
-  const { id, companyName } = newAccount;
-  console.log('계정생성 시도:', { id, companyName, adminId });
-  if (!id || !companyName) return setAccountMessage('모든 항목을 입력해주세요.');
-  try {
-    await axios.post(`${API}/api/admin/create-account`, {
-      requesterId: adminId,
-      newId: id,
-      password: newAccount.password || 'Hansol123!@#',
-      companyName,
-      initialPassword: newAccount.initialPassword || '',
-    });
-    setAccountMessage('✅ 계정 생성 완료!');
-    setNewAccount({ id: '', password: '', companyName: '' });
-  } catch (err) {
-    setAccountMessage('❌ ' + (err.response?.data?.message || '생성 실패'));
-  }
-};
+  const handleSaveConfig = async () => {
+    if (!siteConfig.systemName) return setConfigMessage('교육명을 입력해주세요.');
+    try {
+      await axios.post(`${API}/api/admin/site-config`, { adminId, systemName: siteConfig.systemName });
+      setConfigMessage('✅ 저장 완료!');
+    } catch {
+      setConfigMessage('❌ 저장 실패');
+    }
+  };
 
-const handleLoadAccounts = async () => {
-  try {
-    const res = await axios.get(`${API}/api/admin/accounts?requesterId=${adminId}`);
-    setAccountList(res.data.accounts);
-  } catch {
-    alert('조회 실패');
-  }
-};
+  const handleCreateAccount = async () => {
+    const { id, companyName } = newAccount;
+    console.log('계정생성 시도:', { id, companyName, adminId });
+    if (!id || !companyName) return setAccountMessage('모든 항목을 입력해주세요.');
+    try {
+      await axios.post(`${API}/api/admin/create-account`, {
+        requesterId: adminId,
+        newId: id,
+        password: newAccount.password || 'Hansol123!@#',
+        companyName,
+        initialPassword: newAccount.initialPassword || '',
+      });
+      setAccountMessage('✅ 계정 생성 완료!');
+      setNewAccount({ id: '', password: '', companyName: '' });
+    } catch (err) {
+      setAccountMessage('❌ ' + (err.response?.data?.message || '생성 실패'));
+    }
+  };
 
-// ✅ 추가: 암호 리셋
-const handleResetPassword = async (targetId) => {
-  if (!window.confirm(`${targetId} 계정의 암호를 초기화하시겠습니까?\n초기 암호: Hansol123!@#`)) return;
-  try {
-    await axios.post(`${API}/api/admin/reset-password`, {
-      requesterId: adminId,
-      targetId,
-    });
-    alert(`✅ ${targetId} 암호가 초기화되었습니다.`);
-    handleLoadAccounts(); // 목록 새로고침
-  } catch (err) {
-    alert('❌ ' + (err.response?.data?.message || '초기화 실패'));
-  }
-};
-const handleDeleteAccount = async (targetId) => {
-  if (!window.confirm(`${targetId} 계정을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
-  try {
-    await axios.delete(`${API}/api/admin/delete-account`, { data: { requesterId: adminId, targetId } });
-    alert(`✅ ${targetId} 계정이 삭제되었습니다.`);
-    handleLoadAccounts();
-  } catch (err) {
-    alert('❌ ' + (err.response?.data?.message || '삭제 실패'));
-  }
-};
-const handleViewAccountInfo = async (targetId, targetCompany) => {
-  setAccountInfoLoading(true);
-  setSelectedAccountInfo({ id: targetId, companyName: targetCompany });
-  try {
-    const res = await axios.get(`${API}/api/admin/account-info?requesterId=${adminId}&targetId=${targetId}`);
-    setSelectedAccountInfo({ id: targetId, companyName: targetCompany, ...res.data });
-  } catch {
-    setSelectedAccountInfo({ id: targetId, companyName: targetCompany, error: true });
-  } finally {
-    setAccountInfoLoading(false);
-  }
-};
+  const handleLoadAccounts = async () => {
+    try {
+      const res = await axios.get(`${API}/api/admin/accounts?requesterId=${adminId}`);
+      setAccountList(res.data.accounts);
+    } catch {
+      alert('조회 실패');
+    }
+  };
 
-const handleMaterialUpload = async () => {
-  if (!materialFile) return setMessage('material', '파일을 선택해주세요.');
-  const formData = new FormData();
-  formData.append('file', materialFile);
-  formData.append('adminId', adminId);
-  try {
-    const res = await axios.post(`${API}/api/admin/upload-material`, formData);
-    setMessage('material', '✅ ' + res.data.message);
-  } catch (err) {
-    setMessage('material', '❌ ' + (err.response?.data?.message || '업로드 실패'));
-  }
-};
+  const handleResetPassword = async (targetId) => {
+    if (!window.confirm(`${targetId} 계정의 암호를 초기화하시겠습니까?\n초기 암호: Hansol123!@#`)) return;
+    try {
+      await axios.post(`${API}/api/admin/reset-password`, { requesterId: adminId, targetId });
+      alert(`✅ ${targetId} 암호가 초기화되었습니다.`);
+      handleLoadAccounts();
+    } catch (err) {
+      alert('❌ ' + (err.response?.data?.message || '초기화 실패'));
+    }
+  };
+
+  const handleDeleteAccount = async (targetId) => {
+    if (!window.confirm(`${targetId} 계정을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+    try {
+      await axios.delete(`${API}/api/admin/delete-account`, { data: { requesterId: adminId, targetId } });
+      alert(`✅ ${targetId} 계정이 삭제되었습니다.`);
+      handleLoadAccounts();
+    } catch (err) {
+      alert('❌ ' + (err.response?.data?.message || '삭제 실패'));
+    }
+  };
+
+  const handleViewAccountInfo = async (targetId, targetCompany) => {
+    setAccountInfoLoading(true);
+    setSelectedAccountInfo({ id: targetId, companyName: targetCompany });
+    try {
+      const res = await axios.get(`${API}/api/admin/account-info?requesterId=${adminId}&targetId=${targetId}`);
+      setSelectedAccountInfo({ id: targetId, companyName: targetCompany, ...res.data });
+    } catch {
+      setSelectedAccountInfo({ id: targetId, companyName: targetCompany, error: true });
+    } finally {
+      setAccountInfoLoading(false);
+    }
+  };
+
+  const handleMaterialUpload = async () => {
+    if (!materialFile) return setMessage('material', '파일을 선택해주세요.');
+    const formData = new FormData();
+    formData.append('file', materialFile);
+    formData.append('adminId', adminId);
+    try {
+      const res = await axios.post(`${API}/api/admin/upload-material`, formData);
+      setMessage('material', '✅ ' + res.data.message);
+    } catch (err) {
+      setMessage('material', '❌ ' + (err.response?.data?.message || '업로드 실패'));
+    }
+  };
 
   const handleYoutubeUpload = async () => {
     if (!youtubeUrl) return setMessage('youtube', '링크를 입력해주세요.');
@@ -153,11 +155,11 @@ const handleMaterialUpload = async () => {
     }
   };
 
-const handleEmployeeUpload = async () => {
-  if (!employeeFile) return setMessage('employee', '파일을 선택해주세요.');
-  const formData = new FormData();
-  formData.append('file', employeeFile);
-  formData.append('adminId', adminId);
+  const handleEmployeeUpload = async () => {
+    if (!employeeFile) return setMessage('employee', '파일을 선택해주세요.');
+    const formData = new FormData();
+    formData.append('file', employeeFile);
+    formData.append('adminId', adminId);
     try {
       const res = await axios.post(`${API}/api/admin/upload-employees`, formData);
       setMessage('employee', '✅ ' + res.data.message);
@@ -212,91 +214,110 @@ const handleEmployeeUpload = async () => {
 
   const handleDownloadQuiz = () => window.open(`${API}/api/quiz/download?adminId=${adminId}`, '_blank');
   const handleDownload = () => window.open(`${API}/api/admin/download-employees?adminId=${adminId}`, '_blank');
-const thStyle = { padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid #ddd' };
-const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
+
+  const handleResetEmployee = async () => {
+    if (!resetSabun) return setResetEmployeeMessage('사번을 입력해주세요.');
+    if (!window.confirm(`사번 ${resetSabun} 직원의 이수여부를 초기화하시겠습니까?`)) return;
+    if (!window.confirm('정말로 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    try {
+      const res = await axios.post(`${API}/api/admin/reset-employee`, { adminId, 사번: resetSabun });
+      setResetEmployeeMessage('✅ ' + res.data.message);
+      setResetSabun('');
+    } catch (err) {
+      setResetEmployeeMessage('❌ ' + (err.response?.data?.message || '초기화 실패'));
+    }
+  };
+
+  const handleResetAllEmployees = async () => {
+    if (!window.confirm('전체 직원의 이수여부를 초기화하시겠습니까?')) return;
+    if (!window.confirm('정말로 전체 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    try {
+      const res = await axios.post(`${API}/api/admin/reset-all-employees`, { adminId });
+      setResetAllMessage('✅ ' + res.data.message);
+    } catch (err) {
+      setResetAllMessage('❌ ' + (err.response?.data?.message || '초기화 실패'));
+    }
+  };
+
+  const thStyle = { padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid #ddd' };
+  const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
 
   return (
     <div style={styles.container}>
       <div className="page-wrapper" style={styles.pageWrapper}>
         <h2 style={styles.title}>🛡️ 교육 관리자 대시보드</h2>
-<p style={{ fontSize: '14px', color: '#888', marginTop: '-16px' }}>{companyName}</p>
-<button onClick={() => navigate('/')} style={{ alignSelf: 'flex-start', background: 'none', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 14px', fontSize: '13px', color: '#555', cursor: 'pointer' }}>
-  ← 홈으로
-</button>
+        <p style={{ fontSize: '14px', color: '#888', marginTop: '-16px' }}>{companyName}</p>
+        <button onClick={() => navigate('/')} style={{ alignSelf: 'flex-start', background: 'none', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 14px', fontSize: '13px', color: '#555', cursor: 'pointer' }}>
+          ← 홈으로
+        </button>
 
-{/* 계정 생성 - 슈퍼관리자만 표시 */}
-{isSuper && (
-  <div style={styles.card}>
-    <h3 style={styles.cardTitle}>👤 관리자 계정 생성</h3>
-    <p style={styles.guide}>새 회사의 관리자 계정을 생성합니다.</p>
-    <input type="text" placeholder="아이디" value={newAccount.id}
-      onChange={(e) => setNewAccount(p => ({ ...p, id: e.target.value }))} style={styles.input} />
-    <input type="text" placeholder="회사명 (예: 한솔아이원스(주))" value={newAccount.companyName}
-      onChange={(e) => setNewAccount(p => ({ ...p, companyName: e.target.value }))} style={styles.input} />
-    <input type="password" placeholder={`초기 암호 (미입력 시 Hansol123!@#)`} value={newAccount.initialPassword || ''}
-      onChange={(e) => setNewAccount(p => ({ ...p, initialPassword: e.target.value }))} style={styles.input} />
-    <button style={{ ...styles.button, backgroundColor: '#2c3e50' }} onClick={handleCreateAccount}>계정 생성</button>
-    {accountMessage && <p style={styles.message}>{accountMessage}</p>}
-    <button style={{ ...styles.button, backgroundColor: '#7f8c8d' }} onClick={handleLoadAccounts}>
-      계정 목록 보기
-    </button>
-    {accountList.length > 0 && (
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', marginTop: '8px' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f0f2f5' }}>
-            <th style={thStyle}>아이디</th>
-            <th style={thStyle}>회사명</th>
-            <th style={thStyle}>초기암호변경</th>
-            <th style={thStyle}>암호 리셋</th>
-          </tr>
-        </thead>
-        <tbody>
-          {accountList.map((acc, i) => (
-            <tr key={i}>
-              <td style={tdStyle}>{acc.id}</td>
-              <td style={tdStyle}>{acc.companyName}</td>
-              <td style={{ ...tdStyle, color: acc.mustChangePassword ? '#e74c3c' : '#27ae60' }}>
-                {acc.mustChangePassword ? '미변경' : '변경완료'}
-              </td>
-              <td style={tdStyle}>
-                <button
-                  onClick={() => handleResetPassword(acc.id)}
-                  style={{ padding: '4px 10px', backgroundColor: '#e74c3c', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
-                >
-                  초기화
-                </button>
-                <button
-  onClick={() => handleViewAccountInfo(acc.id, acc.companyName)}
-  style={{ padding: '4px 10px', backgroundColor: '#2980b9', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', marginLeft: '6px' }}
->
-  상세
-</button>
-                <button
-  onClick={() => handleDeleteAccount(acc.id)}
-  style={{ padding: '4px 10px', backgroundColor: '#c0392b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', marginLeft: '6px' }}
->
-  삭제
-</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    )}
-  </div>
-)}
+        {/* 계정 생성 - 슈퍼관리자만 표시 */}
+        {isSuper && (
+          <div style={styles.card}>
+            <h3 style={styles.cardTitle}>👤 관리자 계정 생성</h3>
+            <p style={styles.guide}>새 회사의 관리자 계정을 생성합니다.</p>
+            <input type="text" placeholder="아이디" value={newAccount.id}
+              onChange={(e) => setNewAccount(p => ({ ...p, id: e.target.value }))} style={styles.input} />
+            <input type="text" placeholder="회사명 (예: 한솔아이원스(주))" value={newAccount.companyName}
+              onChange={(e) => setNewAccount(p => ({ ...p, companyName: e.target.value }))} style={styles.input} />
+            <input type="password" placeholder="초기 암호 (미입력 시 Hansol123!@#)" value={newAccount.initialPassword || ''}
+              onChange={(e) => setNewAccount(p => ({ ...p, initialPassword: e.target.value }))} style={styles.input} />
+            <button style={{ ...styles.button, backgroundColor: '#2c3e50' }} onClick={handleCreateAccount}>계정 생성</button>
+            {accountMessage && <p style={styles.message}>{accountMessage}</p>}
+            <button style={{ ...styles.button, backgroundColor: '#7f8c8d' }} onClick={handleLoadAccounts}>
+              계정 목록 보기
+            </button>
+            {accountList.length > 0 && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', marginTop: '8px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f0f2f5' }}>
+                    <th style={thStyle}>아이디</th>
+                    <th style={thStyle}>회사명</th>
+                    <th style={thStyle}>초기암호변경</th>
+                    <th style={thStyle}>관리</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {accountList.map((acc, i) => (
+                    <tr key={i}>
+                      <td style={tdStyle}>{acc.id}</td>
+                      <td style={tdStyle}>{acc.companyName}</td>
+                      <td style={{ ...tdStyle, color: acc.mustChangePassword ? '#e74c3c' : '#27ae60' }}>
+                        {acc.mustChangePassword ? '미변경' : '변경완료'}
+                      </td>
+                      <td style={tdStyle}>
+                        <button onClick={() => handleResetPassword(acc.id)}
+                          style={{ padding: '4px 10px', backgroundColor: '#e74c3c', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                          초기화
+                        </button>
+                        <button onClick={() => handleViewAccountInfo(acc.id, acc.companyName)}
+                          style={{ padding: '4px 10px', backgroundColor: '#2980b9', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', marginLeft: '6px' }}>
+                          상세
+                        </button>
+                        <button onClick={() => handleDeleteAccount(acc.id)}
+                          style={{ padding: '4px 10px', backgroundColor: '#c0392b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', marginLeft: '6px' }}>
+                          삭제
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
 
-{/* 시스템 설정 */}
-<div style={styles.card}>
-  <h3 style={styles.cardTitle}>⚙️ 시스템 설정</h3>
-  <p style={styles.guide}>메인 로그인 화면에 표시되는 교육명을 설정합니다. (회사명은 계정 생성 시 고정)</p>
-  <input type="text" placeholder="교육명 (예: 보안교육 수강 시스템)" value={siteConfig.systemName}
-    onChange={(e) => setSiteConfig(prev => ({ ...prev, systemName: e.target.value }))} style={styles.input} />
-  <button style={{ ...styles.button, backgroundColor: '#2c3e50' }} onClick={handleSaveConfig}>저장하기</button>
-  {configMessage && <p style={styles.message}>{configMessage}</p>}
-</div>
+        {/* 시스템 설정 */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>⚙️ 시스템 설정</h3>
+          <p style={styles.guide}>메인 로그인 화면에 표시되는 교육명을 설정합니다. (회사명은 계정 생성 시 고정)</p>
+          <input type="text" placeholder="교육명 (예: 보안교육 수강 시스템)" value={siteConfig.systemName}
+            onChange={(e) => setSiteConfig(prev => ({ ...prev, systemName: e.target.value }))} style={styles.input} />
+          <button style={{ ...styles.button, backgroundColor: '#2c3e50' }} onClick={handleSaveConfig}>저장하기</button>
+          {configMessage && <p style={styles.message}>{configMessage}</p>}
+        </div>
 
-        {/* 보안교육 자료 업로드 */}
+        {/* 교육 자료 업로드 */}
         <div style={styles.card}>
           <h3 style={styles.cardTitle}>📄 교육 자료 업로드</h3>
           <input type="file" accept=".pdf,.ppt,.pptx" onChange={(e) => setMaterialFile(e.target.files[0])} style={styles.fileInput} />
@@ -330,7 +351,7 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
         {/* 퀴즈 생성 */}
         <div style={styles.card}>
           <h3 style={styles.cardTitle}>🧠 퀴즈 자동 생성</h3>
-          <p style={styles.guide}>유튜브 영상과 교육자료를 기반으로 GPT가 50문항을 생성합니다. 수강자마다 랜덤 10문제가 출제됩니다.</p>
+          <p style={styles.guide}>교육자료를 기반으로 GPT가 50문항을 생성합니다. 수강자마다 랜덤 10문제가 출제됩니다.</p>
           <p style={styles.guide}>⚠️ 생성까지 30~60초 소요됩니다. 버튼 클릭 후 기다려주세요.</p>
           <button
             style={{ ...styles.button, backgroundColor: quizLoading ? '#ccc' : '#8e44ad', cursor: quizLoading ? 'not-allowed' : 'pointer' }}
@@ -347,10 +368,10 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
           )}
           {messages.quiz && <p style={styles.message}>{messages.quiz}</p>}
           {savedQuizInfo.total > 0 && (
-  <p style={{ fontSize: '13px', color: '#27ae60' }}>
-    ✅ 퀴즈 {savedQuizInfo.total}문항 생성되어 있음! (참고교안: {savedMaterial || '없음'} / 생성일: {savedQuizInfo.generatedAt})
-  </p>
-)}
+            <p style={{ fontSize: '13px', color: '#27ae60' }}>
+              ✅ 퀴즈 {savedQuizInfo.total}문항 생성되어 있음! (참고교안: {savedMaterial || '없음'} / 생성일: {savedQuizInfo.generatedAt})
+            </p>
+          )}
         </div>
 
         {/* 퀴즈 문제 열람 */}
@@ -376,37 +397,78 @@ const tdStyle = { padding: '8px 12px', borderBottom: '1px solid #eee' };
           )}
         </div>
 
-
-
         {/* 이수 현황 다운로드 */}
         <div style={styles.card}>
           <h3 style={styles.cardTitle}>📊 이수 현황 다운로드</h3>
           <p style={styles.guide}>현재까지 업데이트된 인원명부를 엑셀로 다운로드합니다.</p>
           <button style={{ ...styles.button, backgroundColor: '#27ae60' }} onClick={handleDownload}>엑셀 다운로드</button>
         </div>
-{selectedAccountInfo && (
-  <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-    <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '32px', width: '480px', maxWidth: '90%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <h3 style={{ fontSize: '18px', color: '#333' }}>📋 {selectedAccountInfo.companyName} ({selectedAccountInfo.id})</h3>
-      {accountInfoLoading ? (
-        <p>불러오는 중...</p>
-      ) : selectedAccountInfo.error ? (
-        <p style={{ color: '#e74c3c' }}>불러오기 실패</p>
-      ) : !selectedAccountInfo.systemName ? (
-        <p style={{ color: '#e74c3c' }}>⚠️ 초기 저장 안되어있음!</p>
-      ) : (
-        <>
-          <p style={{ fontSize: '14px' }}>🎓 교육명: {selectedAccountInfo.systemName}</p>
-          <p style={{ fontSize: '14px' }}>📄 교육자료: {selectedAccountInfo.materialFileName || '❌ 없음'}</p>
-          <p style={{ fontSize: '14px' }}>🎬 유튜브: {selectedAccountInfo.youtubeUrl || '❌ 없음'}</p>
-          <p style={{ fontSize: '14px' }}>👥 인원명부: {selectedAccountInfo.employeeFileName || '❌ 없음'}</p>
-          <p style={{ fontSize: '14px' }}>🧠 퀴즈: {selectedAccountInfo.quizTotal ? `✅ ${selectedAccountInfo.quizTotal}문항 (${selectedAccountInfo.quizGeneratedAt})` : '❌ 미생성'}</p>
-        </>
-      )}
-      <button onClick={() => setSelectedAccountInfo(null)} style={{ padding: '10px', backgroundColor: '#888', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>닫기</button>
-    </div>
-  </div>
-)}
+
+        {/* 이수 현황 초기화 */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>🔄 이수 현황 초기화</h3>
+          <p style={styles.guide}>⚠️ 테스트용 기능입니다. 초기화 시 이수여부가 미완료로 변경됩니다.</p>
+
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="사번 입력"
+              value={resetSabun}
+              onChange={(e) => setResetSabun(e.target.value)}
+              style={{ ...styles.input, flex: 1 }}
+            />
+            <button
+              style={{ ...styles.button, backgroundColor: '#e67e22', whiteSpace: 'nowrap' }}
+              onClick={handleResetEmployee}
+            >
+              특정 직원 초기화
+            </button>
+          </div>
+          {resetEmployeeMessage && <p style={styles.message}>{resetEmployeeMessage}</p>}
+
+          <button
+            style={{ ...styles.button, backgroundColor: '#e74c3c' }}
+            onClick={handleResetAllEmployees}
+          >
+            ⚠️ 전체 직원 초기화
+          </button>
+          {resetAllMessage && <p style={styles.message}>{resetAllMessage}</p>}
+        </div>
+
+        {/* 테스트 이메일 */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>📧 테스트 이메일 발송</h3>
+          <input type="email" placeholder="테스트 이메일 주소" value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)} style={styles.input} />
+          <button style={{ ...styles.button, backgroundColor: '#16a085' }} onClick={handleTestEmail}>발송</button>
+          {testEmailMessage && <p style={styles.message}>{testEmailMessage}</p>}
+        </div>
+
+        {/* 계정 상세 모달 */}
+        {selectedAccountInfo && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+            <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '32px', width: '480px', maxWidth: '90%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h3 style={{ fontSize: '18px', color: '#333' }}>📋 {selectedAccountInfo.companyName} ({selectedAccountInfo.id})</h3>
+              {accountInfoLoading ? (
+                <p>불러오는 중...</p>
+              ) : selectedAccountInfo.error ? (
+                <p style={{ color: '#e74c3c' }}>불러오기 실패</p>
+              ) : !selectedAccountInfo.systemName ? (
+                <p style={{ color: '#e74c3c' }}>⚠️ 초기 저장 안되어있음!</p>
+              ) : (
+                <>
+                  <p style={{ fontSize: '14px' }}>🎓 교육명: {selectedAccountInfo.systemName}</p>
+                  <p style={{ fontSize: '14px' }}>📄 교육자료: {selectedAccountInfo.materialFileName || '❌ 없음'}</p>
+                  <p style={{ fontSize: '14px' }}>🎬 유튜브: {selectedAccountInfo.youtubeUrl || '❌ 없음'}</p>
+                  <p style={{ fontSize: '14px' }}>👥 인원명부: {selectedAccountInfo.employeeFileName || '❌ 없음'}</p>
+                  <p style={{ fontSize: '14px' }}>🧠 퀴즈: {selectedAccountInfo.quizTotal ? `✅ ${selectedAccountInfo.quizTotal}문항 (${selectedAccountInfo.quizGeneratedAt})` : '❌ 미생성'}</p>
+                </>
+              )}
+              <button onClick={() => setSelectedAccountInfo(null)} style={{ padding: '10px', backgroundColor: '#888', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>닫기</button>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

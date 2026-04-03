@@ -521,4 +521,38 @@ router.get('/account-info', async (req, res) => {
   }
 });
 
+// 특정 직원 이수여부 초기화
+router.post('/reset-employee', async (req, res) => {
+  const { adminId, 사번 } = req.body;
+  try {
+    await db.query(
+      `UPDATE employees SET "보안교육이수여부" = '미완료'
+       WHERE company_id = $1 AND "사번" = $2`,
+      [adminId, String(사번)]
+    );
+    res.json({ success: true, message: '초기화 완료' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 전체 직원 이수여부 초기화
+router.post('/reset-all-employees', async (req, res) => {
+  const { adminId } = req.body;
+  try {
+    await db.query(
+      `UPDATE employees SET "보안교육이수여부" = '미완료'
+       WHERE company_id = $1`,
+      [adminId]
+    );
+    await db.query(
+      `DELETE FROM quiz_results WHERE company_id = $1`,
+      [adminId]
+    );
+    res.json({ success: true, message: '전체 초기화 완료' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

@@ -75,12 +75,27 @@ function CompletePage() {
     setSaved(false);
   };
 
-  const saveSignature = () => {
-    const canvas = canvasRef.current;
-    const imgData = canvas.toDataURL('image/png');
-    setSignatureImage(imgData);
-    setSaved(true);
-  };
+const saveSignature = async () => {
+  const canvas = canvasRef.current;
+  const imgData = canvas.toDataURL('image/png');
+  setSignatureImage(imgData);
+  setSaved(true);
+
+  // 서명 이미지를 서버로 전송해서 이메일에 첨부
+  try {
+    await fetch('http://192.168.118.164:4000/api/quiz/submit-signature', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        employee,
+        signatureImage: imgData,
+        quizResult,
+      }),
+    });
+  } catch (err) {
+    console.log('서명 전송 실패:', err);
+  }
+};
 
   const handlePrint = () => {
     window.print();
