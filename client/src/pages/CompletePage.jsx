@@ -12,12 +12,13 @@ function CompletePage() {
 
   const employee = JSON.parse(sessionStorage.getItem('employee') || '{}');
   const quizResult = JSON.parse(sessionStorage.getItem('quizResult') || '{}');
+  const systemName = sessionStorage.getItem('systemName') || '교육';
+  const companyName = sessionStorage.getItem('companyName') || '한솔아이원스(주)';
 
   useEffect(() => {
     if (!employee.사번) navigate('/');
   }, []);
 
-  // 캔버스 드로잉 설정
   useEffect(() => {
     if (!quizResult.passed) return;
     const canvas = canvasRef.current;
@@ -32,10 +33,7 @@ function CompletePage() {
   const getPos = (e, canvas) => {
     const rect = canvas.getBoundingClientRect();
     if (e.touches) {
-      return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top,
-      };
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
     }
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
@@ -75,36 +73,28 @@ function CompletePage() {
     setSaved(false);
   };
 
-const saveSignature = async () => {
-  const canvas = canvasRef.current;
-  const imgData = canvas.toDataURL('image/png');
-  setSignatureImage(imgData);
-  setSaved(true);
+  const saveSignature = async () => {
+    const canvas = canvasRef.current;
+    const imgData = canvas.toDataURL('image/png');
+    setSignatureImage(imgData);
+    setSaved(true);
 
-  // 서명 이미지를 서버로 전송해서 이메일에 첨부
-  try {
-    await fetch('http://192.168.118.164:4000/api/quiz/submit-signature', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        employee,
-        signatureImage: imgData,
-        quizResult,
-      }),
-    });
-  } catch (err) {
-    console.log('서명 전송 실패:', err);
-  }
-};
-
-  const handlePrint = () => {
-    window.print();
+    try {
+      await fetch('http://192.168.118.164:4000/api/quiz/submit-signature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee, signatureImage: imgData, quizResult }),
+      });
+    } catch (err) {
+      console.log('서명 전송 실패:', err);
+    }
   };
+
+  const handlePrint = () => window.print();
 
   const today = new Date();
   const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
 
-  // 불합격
   if (!quizResult.passed) {
     return (
       <div style={styles.container}>
@@ -130,11 +120,11 @@ const saveSignature = async () => {
         {/* 합격 안내 */}
         <div style={styles.successCard}>
           <div style={styles.successIcon}>🎉</div>
-          <h2 style={styles.successTitle}>보안교육 이수 완료!</h2>
+          <h2 style={styles.successTitle}>교육 이수 완료!</h2>
           <p style={styles.successText}>{quizResult.correct}문제 정답 ({quizResult.total}문제 중)</p>
         </div>
 
-        {/* 서명 영역 - 저장 전에만 표시 */}
+        {/* 서명 영역 */}
         {!saved && (
           <div style={styles.signatureCard}>
             <h3 style={styles.signatureTitle}>✍️ 서명해주세요</h3>
@@ -171,13 +161,13 @@ const saveSignature = async () => {
           </div>
         )}
 
-        {/* 이수증 - 서명 저장 후에만 표시 */}
+        {/* 이수증 */}
         {saved && (
           <>
             <div style={styles.certificate} ref={certificateRef}>
               <div style={styles.certHeader}>
-                <h1 style={styles.certTitle}>보안교육 이수증</h1>
-                <p style={styles.certSubTitle}>Security Education Certificate</p>
+                <h1 style={styles.certTitle}>이수증</h1>
+                <p style={styles.certSubTitle}>Certificate of Completion</p>
               </div>
 
               <div style={styles.certDivider} />
@@ -193,7 +183,7 @@ const saveSignature = async () => {
                 </div>
                 <div style={styles.certRow}>
                   <span style={styles.certLabel}>교육명</span>
-                  <span style={styles.certValue}>정보보안 교육</span>
+                  <span style={styles.certValue}>{systemName}</span>
                 </div>
                 <div style={styles.certRow}>
                   <span style={styles.certLabel}>점 수</span>
@@ -203,7 +193,6 @@ const saveSignature = async () => {
                   <span style={styles.certLabel}>이수일</span>
                   <span style={styles.certValue}>{dateStr}</span>
                 </div>
-                {/* 서명 */}
                 <div style={styles.certRow}>
                   <span style={styles.certLabel}>서 명</span>
                   <img src={signatureImage} alt="서명" style={styles.signatureImg} />
@@ -213,12 +202,11 @@ const saveSignature = async () => {
               <div style={styles.certDivider} />
 
               <div style={styles.certFooter}>
-                <p style={styles.certFooterText}>위 사람은 정보보안 교육을 성실히 이수하였음을 증명합니다.</p>
-                <p style={styles.certCompany}>한솔아이원스(주)</p>
+                <p style={styles.certFooterText}>위 사람은 교육을 성실히 이수하였음을 증명합니다.</p>
+                <p style={styles.certCompany}>{companyName}</p>
               </div>
             </div>
 
-            {/* 버튼 */}
             <div style={styles.buttonRow}>
               <button style={styles.printButton} onClick={handlePrint}>
                 🖨️ 이수증 출력 / PDF 저장
@@ -241,7 +229,6 @@ const saveSignature = async () => {
 const styles = {
   container: { minHeight: '100vh', backgroundColor: '#f0f2f5', padding: '40px 0' },
   pageWrapper: { display: 'flex', flexDirection: 'column', gap: '24px' },
-
   successCard: {
     backgroundColor: '#e8f5e9', borderRadius: '12px', padding: '32px',
     textAlign: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
@@ -249,7 +236,6 @@ const styles = {
   successIcon: { fontSize: '48px', marginBottom: '12px' },
   successTitle: { fontSize: '24px', color: '#27ae60', marginBottom: '8px' },
   successText: { fontSize: '16px', color: '#555' },
-
   failCard: {
     backgroundColor: 'white', borderRadius: '12px', padding: '48px 32px',
     textAlign: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
@@ -263,8 +249,6 @@ const styles = {
     marginTop: '16px', padding: '14px 40px', backgroundColor: '#4A90E2',
     color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', cursor: 'pointer',
   },
-
-  // 서명
   signatureCard: {
     backgroundColor: 'white', borderRadius: '12px', padding: '32px',
     boxShadow: '0 2px 10px rgba(0,0,0,0.08)', display: 'flex',
@@ -286,8 +270,6 @@ const styles = {
     flex: 1, padding: '12px', color: 'white',
     border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold',
   },
-
-  // 이수증
   certificate: {
     backgroundColor: 'white', borderRadius: '12px', padding: '48px',
     boxShadow: '0 4px 20px rgba(0,0,0,0.1)', border: '3px solid #4A90E2',
@@ -304,7 +286,6 @@ const styles = {
   certFooter: { textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' },
   certFooterText: { fontSize: '14px', color: '#555' },
   certCompany: { fontSize: '18px', color: '#333', fontWeight: 'bold' },
-
   buttonRow: { display: 'flex', gap: '12px' },
   printButton: {
     flex: 1, padding: '14px', backgroundColor: '#4A90E2', color: 'white',

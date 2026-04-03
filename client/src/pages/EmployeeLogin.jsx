@@ -44,7 +44,9 @@ function EmployeeLogin() {
       if (res.data.success) {
         sessionStorage.setItem('employee', JSON.stringify(res.data.employee));
 sessionStorage.setItem('companyId', selectedEducation);
-        navigate('/video');
+sessionStorage.setItem('systemName', systemName);
+sessionStorage.setItem('companyName', selectedCompany);
+navigate('/video');
       }
     } catch (err) {
       setError(err.response?.data?.message || '오류가 발생했습니다.');

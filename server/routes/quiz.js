@@ -191,7 +191,7 @@ router.get('/get', async (req, res) => {
   }
 });
 
-// 퀴즈 채점
+// 퀴즈 채점 (이메일 발송 제거 - 서명 후 발송으로 통합)
 router.post('/submit', async (req, res) => {
   try {
     const { answers, questions, employee } = req.body;
@@ -216,61 +216,6 @@ router.post('/submit', async (req, res) => {
         [employee.companyId, String(employee.사번)]
       );
       console.log(`${employee.이름}(${employee.사번}) 이수 완료 처리됨`);
-
-      const today = new Date();
-      const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
-
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px;">
-          <div style="text-align: center; margin-bottom: 32px;">
-            <h1 style="color: #333;">보안교육 이수 완료</h1>
-            <p style="color: #888;">Security Education Certificate</p>
-          </div>
-          <div style="background: #f8f9fa; border-radius: 12px; padding: 32px; margin-bottom: 24px;">
-            <p style="font-size: 16px; color: #333; margin-bottom: 24px;">
-              안녕하세요, <b>${employee.이름}</b>님!<br/>
-              보안교육을 성공적으로 이수하셨습니다. 🎉
-            </p>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr style="border-bottom: 1px solid #ddd;">
-                <td style="padding: 12px; color: #888; width: 100px;">성명</td>
-                <td style="padding: 12px; color: #333; font-weight: bold;">${employee.이름}</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #ddd;">
-                <td style="padding: 12px; color: #888;">사번</td>
-                <td style="padding: 12px; color: #333; font-weight: bold;">${employee.사번}</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #ddd;">
-                <td style="padding: 12px; color: #888;">교육명</td>
-                <td style="padding: 12px; color: #333; font-weight: bold;">정보보안 교육</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #ddd;">
-                <td style="padding: 12px; color: #888;">점수</td>
-                <td style="padding: 12px; color: #333; font-weight: bold;">${correct} / ${questions.length}</td>
-              </tr>
-              <tr>
-                <td style="padding: 12px; color: #888;">이수일</td>
-                <td style="padding: 12px; color: #333; font-weight: bold;">${dateStr}</td>
-              </tr>
-            </table>
-          </div>
-          <div style="text-align: center; color: #888; font-size: 13px;">
-            <p>위 사람은 정보보안 교육을 성실히 이수하였음을 증명합니다.</p>
-            <p style="font-weight: bold; color: #333;">한솔아이원스(주)</p>
-          </div>
-        </div>
-      `;
-
-      transporter.sendMail({
-        from: `"한솔아이원스 보안교육" <${process.env.EMAIL_USER}>`,
-        to: employee.이메일,
-        subject: `[한솔아이원스] ${employee.이름}님의 보안교육 이수 완료 안내`,
-        html: emailHtml,
-      }).then(() => {
-        console.log(`이메일 발송 완료: ${employee.이메일}`);
-      }).catch((mailErr) => {
-        console.log('이메일 발송 실패:', mailErr.message);
-      });
     }
 
     res.json({ success: true, correct, total: questions.length, passed });
@@ -337,27 +282,35 @@ router.get('/download', async (req, res) => {
     res.status(500).json({ success: false, message: '다운로드 실패' });
   }
 });
+
 // 서명 이미지 수신 후 이메일 발송
 router.post('/submit-signature', async (req, res) => {
   try {
     const { employee, signatureImage, quizResult } = req.body;
 
+    // 회사명, 교육명 DB에서 가져오기
+    const settingResult = await db.query(
+      'SELECT company_name, system_name FROM settings WHERE admin_id = $1',
+      [employee.companyId]
+    );
+    const companyName = settingResult.rows[0]?.company_name || '한솔아이원스';
+    const systemName = settingResult.rows[0]?.system_name || '보안교육';
+
     const today = new Date();
     const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
 
-    // base64에서 이미지 데이터 추출
     const base64Data = signatureImage.replace(/^data:image\/png;base64,/, '');
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px;">
         <div style="text-align: center; margin-bottom: 32px;">
-          <h1 style="color: #333;">보안교육 이수 완료</h1>
+          <h1 style="color: #333;">${systemName} 이수 완료</h1>
           <p style="color: #888;">Security Education Certificate</p>
         </div>
         <div style="background: #f8f9fa; border-radius: 12px; padding: 32px; margin-bottom: 24px;">
           <p style="font-size: 16px; color: #333; margin-bottom: 24px;">
             안녕하세요, <b>${employee.이름}</b>님!<br/>
-            보안교육을 성공적으로 이수하셨습니다. 🎉
+            ${systemName}을 성공적으로 이수하셨습니다. 🎉
           </p>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #ddd;">
@@ -370,7 +323,7 @@ router.post('/submit-signature', async (req, res) => {
             </tr>
             <tr style="border-bottom: 1px solid #ddd;">
               <td style="padding: 12px; color: #888;">교육명</td>
-              <td style="padding: 12px; color: #333; font-weight: bold;">정보보안 교육</td>
+              <td style="padding: 12px; color: #333; font-weight: bold;">${systemName}</td>
             </tr>
             <tr style="border-bottom: 1px solid #ddd;">
               <td style="padding: 12px; color: #888;">점수</td>
@@ -389,16 +342,16 @@ router.post('/submit-signature', async (req, res) => {
           </table>
         </div>
         <div style="text-align: center; color: #888; font-size: 13px;">
-          <p>위 사람은 정보보안 교육을 성실히 이수하였음을 증명합니다.</p>
-          <p style="font-weight: bold; color: #333;">한솔아이원스(주)</p>
+          <p>위 사람은 ${systemName}을 성실히 이수하였음을 증명합니다.</p>
+          <p style="font-weight: bold; color: #333;">${companyName}</p>
         </div>
       </div>
     `;
 
     await transporter.sendMail({
-      from: `"한솔아이원스 보안교육" <${process.env.EMAIL_USER}>`,
+      from: `"${companyName}" <${process.env.EMAIL_USER}>`,
       to: employee.이메일,
-      subject: `[한솔아이원스] ${employee.이름}님의 보안교육 이수증 (서명 포함)`,
+      subject: `[${companyName}] ${employee.이름}님의 ${systemName} 이수 완료 안내`,
       html: emailHtml,
       attachments: [
         {
@@ -417,7 +370,6 @@ router.post('/submit-signature', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
 
 // 특정 직원 이수여부 초기화
 router.post('/reset-employee', async (req, res) => {
