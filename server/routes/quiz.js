@@ -38,7 +38,7 @@ async function extractTextFromPDF(filePath) {
       type: 'image_url',
       image_url: {
         url: `data:image/png;base64,${fs.readFileSync(path.join(tmpDir, f)).toString('base64')}`,
-        detail: 'low',
+        detail: 'high',
       },
     }));
 

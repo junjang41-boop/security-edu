@@ -25,7 +25,7 @@ function SlidePage() {
   useEffect(() => {
     const companyId = sessionStorage.getItem('companyId');
 axios.get(`http://192.168.118.164:4000/api/education/material?companyId=${companyId}`)
-      .then((res) => setFileUrl(res.data.fileUrl))
+      .then((res) => setFileUrl(`http://192.168.118.164:4000${res.data.fileUrl}`))
       .catch(() => setError('등록된 교육자료가 없습니다. 관리자에게 문의하세요.'));
   }, []);
 

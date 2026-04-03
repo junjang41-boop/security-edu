@@ -4,9 +4,9 @@ import axios from 'axios';
 
 // 유튜브 URL에서 영상 ID 추출하는 함수
 function getYoutubeId(url) {
-  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+  const regExp = /(?:youtube\.com\/(?:watch\?v=|embed\/|live\/|v\/)|youtu\.be\/)([^#&?]{11})/;
   const match = url.match(regExp);
-  return match && match[7].length === 11 ? match[7] : null;
+  return match ? match[1] : null;
 }
 
 function VideoPage() {
