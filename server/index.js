@@ -1,7 +1,8 @@
-const { db } = require('./firebase');
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
+
 console.log('ADMIN_ID:', process.env.ADMIN_ID);
 console.log('환경변수 확인 완료');
 
@@ -14,6 +15,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// 업로드된 교육자료 정적 서빙
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads/materials');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const API = 'https://security-edu-production.up.railway.app';
+const API = 'http://192.168.118.164:4000';
 
 function AdminDashboard() {
 const navigate = useNavigate();

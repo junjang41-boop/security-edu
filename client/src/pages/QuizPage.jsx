@@ -20,7 +20,7 @@ function QuizPage() {
   // 랜덤 10문제 불러오기
   useEffect(() => {
     const companyId = sessionStorage.getItem('companyId');
-axios.get(`https://security-edu-production.up.railway.app/api/quiz/get?companyId=${companyId}`)
+axios.get(`http://192.168.118.164:4000/api/quiz/get?companyId=${companyId}`)
       .then((res) => {
         setQuestions(res.data.questions);
         setLoading(false);
@@ -46,7 +46,7 @@ axios.get(`https://security-edu-production.up.railway.app/api/quiz/get?companyId
     setSubmitting(true);
     const answerArray = questions.map((q) => answers[String(q.id)]);
     try {
-      const res = await axios.post('https://security-edu-production.up.railway.app/api/quiz/submit', {
+      const res = await axios.post('http://192.168.118.164:4000/api/quiz/submit', {
         answers: answerArray,
         questions,
         employee,
