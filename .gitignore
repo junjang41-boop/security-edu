@@ -8,4 +8,5 @@ server/node_modules/
 client/node_modules/
 
 # 빌드 결과물
-client/dist/
+client/dist/.env
+.env

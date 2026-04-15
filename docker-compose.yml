@@ -1,4 +1,4 @@
-version: '3.8'
+name: security-edu-new
 
 services:
   db:
@@ -6,35 +6,46 @@ services:
     container_name: security-edu-db
     restart: always
     environment:
-      POSTGRES_DB: ionesdb
-      POSTGRES_USER: iones
-      POSTGRES_PASSWORD: Hansoliones1!
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - /home/ionesadmin/security-edu-new/server/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports:
-      - '5432:5432'
+      - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U iones -d ionesdb']
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   server:
     build:
-      context: /home/ionesadmin/security-edu-new/server
+      context: ./server
       dockerfile: Dockerfile
     container_name: security-edu-server
     restart: always
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - /home/ionesadmin/security-edu-new/server/.env
+    environment:
+      ADMIN_ID: ${ADMIN_ID}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      PORT: ${PORT}
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "4000:4000"
     volumes:
       - uploads_data:/app/uploads
-    ports:
-      - '4000:4000'
 
 volumes:
   postgres_data:
